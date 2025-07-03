@@ -75,7 +75,7 @@ const CheckoutPage = () => {
                     <div className="ml-4 flex-1">
                       <div className="flex justify-between">
                         <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
-                        <p className="text-sm font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="text-sm font-medium text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                       <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
                     </div>
@@ -87,7 +87,7 @@ const CheckoutPage = () => {
             <div className="border-t border-gray-200 pt-4">
               <div className="flex justify-between text-base font-medium text-gray-900 mb-2">
                 <p>Subtotal</p>
-                <p>${total.toFixed(2)}</p>
+                <p>₹{total.toFixed(2)}</p>
               </div>
               <div className="flex justify-between text-sm text-gray-600 mb-2">
                 <p>Shipping</p>
@@ -95,7 +95,7 @@ const CheckoutPage = () => {
               </div>
               <div className="flex justify-between text-base font-medium text-gray-900 mb-4">
                 <p>Total</p>
-                <p>${total.toFixed(2)}</p>
+                <p>₹{total.toFixed(2)}</p>
               </div>
               
               <p className="text-sm text-gray-500 mt-4">
@@ -109,4 +109,4 @@ const CheckoutPage = () => {
   );
 };
 
-export default CheckoutPage; 
+export default CheckoutPage;

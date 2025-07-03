@@ -122,7 +122,7 @@ const ProductDetailPage = () => {
           </Link>
           
           <h1 className="mt-2 text-3xl font-bold text-gray-900">{product.name}</h1>
-          <p className="mt-2 text-2xl font-medium text-gray-900">${product.price.toFixed(2)}</p>
+          <p className="mt-2 text-2xl font-medium text-gray-900">₹{product.price.toFixed(2)}</p>
           
           <div className="mt-6">
             <h3 className="text-lg font-medium text-gray-900">Description</h3>
@@ -161,7 +161,7 @@ const ProductDetailPage = () => {
           <div className="mt-8 border-t border-gray-200 pt-6">
             <h3 className="text-sm font-medium text-gray-900">Shipping Information</h3>
             <p className="mt-2 text-sm text-gray-500">
-              Free shipping on all orders over $50. Standard delivery 3-5 business days.
+              Free shipping on all orders over ₹5,000. Standard delivery 3-5 business days.
             </p>
           </div>
         </div>
@@ -170,4 +170,4 @@ const ProductDetailPage = () => {
   );
 };
 
-export default ProductDetailPage; 
+export default ProductDetailPage;

@@ -61,7 +61,7 @@ const CartPage = () => {
               <dl className="text-sm">
                 <div className="py-2 flex items-center justify-between">
                   <dt className="text-gray-600">Subtotal</dt>
-                  <dd className="font-medium text-gray-900">${total.toFixed(2)}</dd>
+                  <dd className="font-medium text-gray-900">₹{total.toFixed(2)}</dd>
                 </div>
                 <div className="py-2 flex items-center justify-between">
                   <dt className="text-gray-600">Shipping</dt>
@@ -69,7 +69,7 @@ const CartPage = () => {
                 </div>
                 <div className="py-2 flex items-center justify-between border-t border-gray-200">
                   <dt className="text-base font-medium text-gray-900">Total</dt>
-                  <dd className="text-base font-medium text-gray-900">${total.toFixed(2)}</dd>
+                  <dd className="text-base font-medium text-gray-900">₹{total.toFixed(2)}</dd>
                 </div>
               </dl>
             </div>
@@ -95,4 +95,4 @@ const CartPage = () => {
   );
 };
 
-export default CartPage; 
+export default CartPage;

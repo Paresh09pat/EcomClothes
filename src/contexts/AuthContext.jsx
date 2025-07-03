@@ -32,8 +32,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    setUser(null);
+    // First remove from localStorage
     localStorage.removeItem('user');
+    // Add a small delay before updating state to prevent UI flickering
+    setTimeout(() => {
+      setUser(null);
+    }, 300);
   };
 
   const value = {
@@ -48,4 +52,4 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export default AuthContext; 
+export default AuthContext;
