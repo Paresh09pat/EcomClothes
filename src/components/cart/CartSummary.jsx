@@ -5,7 +5,7 @@ const CartSummary = ({ cartItems }) => {
   // Calculate subtotal
   const subtotal = cartItems.reduce((total, item) => {
     return total + item.price * item.quantity;
-  }, 0);
+  }, 0); 
 
   // Calculate shipping (free for now)
   const shipping = 0;
