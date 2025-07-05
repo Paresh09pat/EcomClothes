@@ -1,41 +1,47 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
+import { baseUrl } from '../utils/constant';
+import { toast } from 'react-toastify';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const { login } = useAuth();
+
+  const { login, user } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
-      // In a real app, this would validate with a backend
-      // For demo purposes, we'll simulate a successful login
-      const success = login({ 
-        id: 1, 
-        name: 'Demo User', 
-        email 
-      });
-      
-      if (success) {
+      const res = await axios.post(`${baseUrl}/auth/login`, { email, password });
+      login(res?.data);
+
+
+      if (res.status === 200) {
         navigate('/');
       }
     } catch (err) {
-      setError('Failed to log in. Please check your credentials.');
-      console.error(err);
+      setError(err.response.data.message);
+      console.error(err.response.data.message);
+      toast.error(err.response.data.message);
     }
-    
+
     setLoading(false);
   };
-  
+
+  useEffect(() => {
+    if (localStorage.getItem('_token_ecommerce')) {
+      navigate('/');
+    }
+  }, []);
+
   return (
     <div className="container py-12">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden">
@@ -43,13 +49,13 @@ const LoginPage = () => {
           <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
             Login to Your Account
           </h2>
-          
+
           {error && (
             <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
               <p>{error}</p>
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -64,7 +70,7 @@ const LoginPage = () => {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -78,7 +84,7 @@ const LoginPage = () => {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -90,14 +96,14 @@ const LoginPage = () => {
                   Remember me
                 </label>
               </div>
-              
+
               <div className="text-sm">
                 <Link to="#" className="font-medium text-indigo-600 hover:text-indigo-500">
                   Forgot password?
                 </Link>
               </div>
             </div>
-            
+
             <div>
               <button
                 type="submit"
@@ -108,7 +114,7 @@ const LoginPage = () => {
               </button>
             </div>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}

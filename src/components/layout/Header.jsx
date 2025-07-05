@@ -20,6 +20,7 @@ const Header = () => {
   const { itemCount } = useCart();
   const location = useLocation();
 
+  console.log("user>>.",user);
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {

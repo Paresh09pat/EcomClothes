@@ -8,32 +8,21 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
+
 
   const login = (userData) => {
     // In a real app, you would validate credentials with an API
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    console.log("dataUser>>.", userData);
+    localStorage.setItem('_token_ecommerce', userData.token);
     return true;
   };
 
-  const register = (userData) => {
-    // In a real app, you would send this data to your API
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    return true;
-  };
+
 
   const logout = () => {
     // First remove from localStorage
-    localStorage.removeItem('user');
+    localStorage.removeItem('_token_ecommerce');
     // Add a small delay before updating state to prevent UI flickering
     setTimeout(() => {
       setUser(null);
@@ -44,7 +33,6 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     login,
-    register,
     logout,
     isAuthenticated: !!user,
   };

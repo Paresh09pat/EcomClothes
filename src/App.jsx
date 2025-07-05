@@ -15,8 +15,11 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import WishlistPage from './pages/WishlistPage';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
-// Loading spinner for Suspense fallback
+// Spinner for lazy loading
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-600"></div>
@@ -27,23 +30,34 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
+        <ToastContainer />
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<HomePage />} />
-                  <Route path="products/:productId" element={<ProductDetailPage />} />
-                  <Route path="categories/:categoryId" element={<CategoryPage />} />
-                  <Route path="cart" element={<CartPage />} />
-                  <Route path="checkout" element={<CheckoutPage />} />
-                  <Route path="order-confirmation" element={<OrderConfirmationPage />} />
-                  <Route path="login" element={<LoginPage />} />
-                  <Route path="register" element={<RegisterPage />} />
-                  <Route path="orders" element={<OrderHistoryPage />} />
-                  <Route path="wishlist" element={<WishlistPage />} />
-                </Route>
+                  {/* 🔓 Public Routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+
+                
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
+                        <Layout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route index element={<HomePage />} />
+                    <Route path="products/:productId" element={<ProductDetailPage />} />
+                    <Route path="categories/:categoryId" element={<CategoryPage />} />
+                    <Route path="cart" element={<CartPage />} />
+                    <Route path="checkout" element={<CheckoutPage />} />
+                    <Route path="order-confirmation" element={<OrderConfirmationPage />} />
+                    <Route path="orders" element={<OrderHistoryPage />} />
+                    <Route path="wishlist" element={<WishlistPage />} />
+                  </Route>
                 </Routes>
               </Suspense>
             </WishlistProvider>
