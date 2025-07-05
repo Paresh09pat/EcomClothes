@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  ShoppingBagIcon, 
-  UserIcon, 
-  Bars3Icon, 
-  XMarkIcon, 
-  HeartIcon, 
+import {
+  ShoppingBagIcon,
+  UserIcon,
+  Bars3Icon,
+  XMarkIcon,
+  HeartIcon,
   MagnifyingGlassIcon,
   PhoneIcon
 } from '@heroicons/react/24/outline';
@@ -19,8 +19,9 @@ const Header = () => {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
   const location = useLocation();
-
-  console.log("user>>.",user);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+  console.log("user>>.", user);
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +36,17 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [profileMenuOpen]);
+
   // Close mobile menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -48,6 +60,9 @@ const Header = () => {
     { name: 'New Arrivals', path: '#' },
     { name: 'Sale', path: '#' }
   ];
+
+
+ 
 
   return (
     <>
@@ -66,7 +81,7 @@ const Header = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Main Header */}
       <header className={`bg-white sticky top-0 z-50 ${scrolled ? 'shadow-md' : ''} transition-shadow duration-300`}>
         <div className="container py-4">
@@ -79,7 +94,7 @@ const Header = () => {
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex space-x-8">
               {categories.map((category) => (
-                <Link 
+                <Link
                   key={category.name}
                   to={category.path}
                   className="text-gray-700 hover:text-indigo-600 font-medium relative group py-2"
@@ -91,7 +106,7 @@ const Header = () => {
             </nav>
 
             {/* Mobile menu button */}
-            <button 
+            <button
               className="lg:hidden text-gray-700 hover:text-indigo-600 focus:outline-none"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
@@ -106,28 +121,28 @@ const Header = () => {
             {/* User, Wishlist, Search and Cart */}
             <div className="flex items-center space-x-5">
               {/* Search */}
-              <button 
+              <button
                 onClick={() => setSearchOpen(!searchOpen)}
                 className="text-gray-700 hover:text-indigo-600 transition-colors hidden md:block"
                 aria-label="Search"
               >
                 <MagnifyingGlassIcon className="h-6 w-6" />
               </button>
-              
+
               {/* Wishlist */}
-              <Link 
-                to="#" 
+              <Link
+                to="#"
                 className="text-gray-700 hover:text-indigo-600 transition-colors relative hidden md:block"
                 aria-label="Wishlist"
               >
                 <HeartIcon className="h-6 w-6" />
                 <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">0</span>
               </Link>
-              
+
               {/* Cart */}
               <div className="relative">
-                <Link 
-                  to="/cart" 
+                <Link
+                  to="/cart"
                   className="text-gray-700 hover:text-indigo-600 transition-colors"
                   aria-label="Cart"
                 >
@@ -139,15 +154,15 @@ const Header = () => {
                   )}
                 </Link>
               </div>
-              
+
               {/* User Account */}
               {user ? (
-                <div className="relative group">
-                  <button className="flex items-center text-gray-700 hover:text-indigo-600 transition-colors">
+                <div ref={profileMenuRef} className="relative">
+                  <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="flex items-center text-gray-700 hover:text-indigo-600 transition-colors">
                     <UserIcon className="h-6 w-6" />
-                    <span className="ml-1 hidden sm:inline font-medium">{user.name}</span>
+                    <span className="ml-1 hidden sm:inline font-medium">{user?.name}</span>
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-20 hidden group-hover:block border border-gray-100 transition-opacity duration-300 ease-in-out">
+                  <div className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-20 ${profileMenuOpen ? 'block' : 'hidden'} border border-gray-100 transition-opacity duration-300 ease-in-out`}>
                     <Link to="/profile" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
                       My Profile
                     </Link>
@@ -158,7 +173,7 @@ const Header = () => {
                       My Wishlist
                     </Link>
                     <div className="border-t border-gray-100 my-1"></div>
-                    <button 
+                    <button
                       onClick={logout}
                       className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
                     >
@@ -178,9 +193,9 @@ const Header = () => {
           {/* Search Bar - Conditional */}
           {searchOpen && (
             <div className="mt-4 relative">
-              <input 
-                type="text" 
-                placeholder="Search for products..." 
+              <input
+                type="text"
+                placeholder="Search for products..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
               <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-600">
@@ -193,7 +208,7 @@ const Header = () => {
           {mobileMenuOpen && (
             <nav className="mt-4 py-4 border-t border-gray-200 lg:hidden">
               <div className="flex justify-between mb-4">
-                <button 
+                <button
                   onClick={() => setSearchOpen(!searchOpen)}
                   className="text-gray-700 hover:text-indigo-600 flex items-center"
                 >
@@ -205,11 +220,11 @@ const Header = () => {
                   <span>Wishlist</span>
                 </Link>
               </div>
-              
+
               <ul className="space-y-3">
                 {categories.map((category) => (
                   <li key={category.name}>
-                    <Link 
+                    <Link
                       to={category.path}
                       className="text-gray-700 hover:text-indigo-600 block font-medium py-1"
                     >
@@ -218,14 +233,14 @@ const Header = () => {
                   </li>
                 ))}
               </ul>
-              
+
               <div className="mt-6 pt-4 border-t border-gray-200">
                 {user ? (
                   <div className="space-y-3">
                     <Link to="/profile" className="block text-gray-700 hover:text-indigo-600">My Profile</Link>
                     <Link to="/orders" className="block text-gray-700 hover:text-indigo-600">My Orders</Link>
                     <Link to="/wishlist" className="block text-gray-700 hover:text-indigo-600">My Wishlist</Link>
-                    <button 
+                    <button
                       onClick={logout}
                       className="block w-full text-left text-gray-700 hover:text-indigo-600 py-1"
                     >

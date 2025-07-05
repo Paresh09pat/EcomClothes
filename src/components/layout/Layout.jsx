@@ -3,9 +3,25 @@ import { useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import ScrollToTop from '../common/ScrollToTop';
+import { useAuth } from '../../contexts/AuthContext';
+import axios from 'axios';
+import { baseUrl } from '../../utils/constant';
 
 const Layout = () => {
   const location = useLocation();
+  const { setUser } = useAuth();
+
+  const getProfile = async () => {
+    const res = await axios.get(`${baseUrl}/user/profile`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('_token_ecommerce')}`
+      }
+      
+
+    });
+    console.log("res>>.",res);
+    setUser(res?.data?.user);
+  }
   
   // Scroll to top when navigating to a new page
   useEffect(() => {
@@ -14,6 +30,10 @@ const Layout = () => {
       behavior: 'smooth'
     });
   }, [location.pathname]);
+
+  useEffect(() => {
+    getProfile();
+  }, []);
   
   return (
     <div className="flex flex-col min-h-screen">
