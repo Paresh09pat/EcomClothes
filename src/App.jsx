@@ -36,22 +36,27 @@ function App() {
             <WishlistProvider>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-                  {/* 🔓 Public Routes */}
+                 
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
 
+             
+                  <Route
+                    element={<Layout />}
+                  >
+                    <Route index element={<HomePage />} />
+                    <Route path="products/:productId" element={<ProductDetailPage />} />
+                    <Route path="categories/:categoryId" element={<CategoryPage />} />
+                  </Route>
+
                 
                   <Route
-                    path="/*"
                     element={
                       <ProtectedRoute>
                         <Layout />
                       </ProtectedRoute>
                     }
                   >
-                    <Route index element={<HomePage />} />
-                    <Route path="products/:productId" element={<ProductDetailPage />} />
-                    <Route path="categories/:categoryId" element={<CategoryPage />} />
                     <Route path="cart" element={<CartPage />} />
                     <Route path="checkout" element={<CheckoutPage />} />
                     <Route path="order-confirmation" element={<OrderConfirmationPage />} />
