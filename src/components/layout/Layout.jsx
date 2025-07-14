@@ -19,7 +19,6 @@ const Layout = () => {
       
 
     });
-    console.log("res>>.",res);
     setUser(res?.data?.user);
   }
   

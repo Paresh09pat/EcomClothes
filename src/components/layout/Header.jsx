@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+
 import {
   ShoppingBagIcon,
   UserIcon,
@@ -9,19 +11,17 @@ import {
   MagnifyingGlassIcon,
   PhoneIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, wishlist } = useAuth();
   const { itemCount } = useCart();
   const location = useLocation();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
-  console.log("user>>.", user);
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
@@ -53,10 +53,10 @@ const Header = () => {
   }, [location]);
 
   const categories = [
-    { name: 'Men', path: '/categories/men' },
-    { name: 'Women', path: '/categories/women' },
-    { name: 'Kids', path: '/categories/kids' },
-    { name: 'Accessories', path: '/categories/accessories' },
+    { name: 'Men', path: '/categories/Men' },
+    { name: 'Women', path: '/categories/Women' },
+    { name: 'Kids', path: '/categories/Kids' },
+    { name: 'Accessories', path: '/categories/Accessories' },
     { name: 'New Arrivals', path: '#' },
     { name: 'Sale', path: '#' }
   ];
@@ -131,12 +131,12 @@ const Header = () => {
 
               {/* Wishlist */}
               <Link
-                to="#"
+                to="/wishlist"
                 className="text-gray-700 hover:text-indigo-600 transition-colors relative hidden md:block"
                 aria-label="Wishlist"
               >
                 <HeartIcon className="h-6 w-6" />
-                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">0</span>
+                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">{wishlist.length}</span>
               </Link>
 
               {/* Cart */}

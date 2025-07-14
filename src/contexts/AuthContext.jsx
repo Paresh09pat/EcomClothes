@@ -1,4 +1,6 @@
+import axios from 'axios';
 import { createContext, useState, useContext, useEffect } from 'react';
+import { baseUrl } from '../utils/constant';
 
 const AuthContext = createContext();
 
@@ -7,24 +9,24 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [wishlist, setWishlist] = useState([]);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
+  const token = localStorage.getItem('_token_ecommerce');
 
+  const isAuthenticated = !!token
 
   const login = (userData) => {
     setUser(userData);
-    console.log("dataUser>>.", userData);
     localStorage.setItem('_token_ecommerce', userData.token);
     return true;
   };
 
   const adminlogin = (userData) => {
     setUser(userData);
-    console.log("dataUser>>.", userData);
     localStorage.setItem('_token_ecommerce_admin', userData.token);
     return true;
   };
-
-
 
   const logout = () => {
     // First remove from localStorage
@@ -32,6 +34,7 @@ export const AuthProvider = ({ children }) => {
     // Add a small delay before updating state to prevent UI flickering
     setTimeout(() => {
       setUser(null);
+      setWishlist([]); // Clear wishlist on logout
     }, 300);
   };
 
@@ -40,15 +43,89 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Toggle wishlist function that handles both add and remove
+  const toggleWishlist = async (product) => {
+    if (!token) {
+      throw new Error('User not authenticated');
+    }
+
+    setWishlistLoading(true);
+    try {
+      const response = await axios.post(`${baseUrl}/v1/wishlist/add`, {
+        productId: product._id,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      // Refresh wishlist after successful toggle
+      await getWishlist();
+      
+      return response;
+    }
+    catch (err) {
+      console.error('Wishlist toggle error:', err);
+      throw err;
+    }
+    finally {
+      setWishlistLoading(false);
+    }
+  }
+  // Get wishlist from server
+  const getWishlist = async () => {
+    if (!token) {
+      setWishlist([]);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${baseUrl}/v1/wishlist/get`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setWishlist(response.data.products || []);
+      return response.data.products;
+    }
+    catch (err) {
+      console.error('Get wishlist error:', err);
+      setWishlist([]);
+      return [];
+    }
+  }
+
+  // Check if product is in wishlist
+  const isProductInWishlist = (productId) => {
+    return wishlist.some(product => product._id === productId);
+  }
+
+  // Load wishlist on authentication change
+  useEffect(() => {
+    if (token && isAuthenticated) {
+      getWishlist();
+    } else {
+      setWishlist([]);
+    }
+  }, [token, isAuthenticated]);
+
   const value = {
     user,
     loading,
     login,
+    token,
     logout,
+    isAuthenticated,
     setUser,
     adminlogin,
     logoutAdmin,
-    isAuthenticated: !!user,
+    wishlist,
+    wishlistLoading,
+    isProductInWishlist,
+    toggleWishlist,
+    getWishlist,
+    // Keep the old function name for backward compatibility but use the new toggle
+    addToWishlist: toggleWishlist,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

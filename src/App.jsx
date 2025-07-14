@@ -2,9 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
-import { WishlistProvider } from './contexts/WishlistContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Layout from './components/layout/Layout';
+
 import HomePage from './pages/HomePage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CategoryPage from './pages/CategoryPage';
@@ -15,17 +15,19 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import WishlistPage from './pages/WishlistPage';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import ProductForm from './Admin/ProductForm';
+
 import AdminLogin from './Admin/AdminLogin';
 import AdminProtect from './components/auth/AdminProtect';
+import ProductForm from './Admin/ProductForm';
 
-// Spinner for lazy loading
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-600"></div>
+  <div className="flex justify-center items-center h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
   </div>
 );
 
@@ -36,55 +38,51 @@ function App() {
         <ToastContainer />
         <AuthProvider>
           <CartProvider>
-            <WishlistProvider>
-              <Suspense fallback={<LoadingSpinner />}>
-                <Routes>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
 
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
+                {/* Public Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/admin-login" element={<AdminLogin />} />
 
+                {/* Admin Protected Route */}
+                <Route
+                  path="/product-form"
+                  element={
+                    <AdminProtect>
+                      <ProductForm />
+                    </AdminProtect>
+                  }
+                />
 
-                  <Route
-                    element={<Layout />}
-                  >
-                    <Route index element={<HomePage />} />
-                    <Route path="products/:productId" element={<ProductDetailPage />} />
-                    <Route path="categories/:categoryId" element={<CategoryPage />} />
-                  </Route>
+                
+                <Route element={<Layout />}>
+                  <Route index element={<HomePage />} />
+                  <Route path="products/:productId" element={<ProductDetailPage />} />
+                  <Route path="categories/:categoryId" element={<CategoryPage />} />
+                </Route>
 
+                {/* Protected User Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <Layout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="cart" element={<CartPage />} />
+                  <Route path="checkout" element={<CheckoutPage />} />
+                  <Route path="order-confirmation" element={<OrderConfirmationPage />} />
+                  <Route path="orders" element={<OrderHistoryPage />} />
+                  <Route path="wishlist" element={<WishlistPage />} />
+                </Route>
 
-                  <Route
-                    element={
-                      <ProtectedRoute>
-                        <Layout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route path="cart" element={<CartPage />} />
-                    <Route path="checkout" element={<CheckoutPage />} />
-                    <Route path="order-confirmation" element={<OrderConfirmationPage />} />
-                    <Route path="orders" element={<OrderHistoryPage />} />
-                    <Route path="wishlist" element={<WishlistPage />} />
-                  </Route>
-                </Routes>
-
-
-
-              </Suspense>
-            </WishlistProvider>
+              </Routes>
+            </Suspense>
           </CartProvider>
-
-          <Routes>
-            <Route path="/admin-login" element={<AdminLogin />} />
-
-            <Route path="/product-form" element={
-              <AdminProtect><ProductForm /></AdminProtect>} />
-          </Routes>
         </AuthProvider>
       </Router>
-
-
-
     </ErrorBoundary>
   );
 }

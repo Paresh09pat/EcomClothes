@@ -15,7 +15,6 @@ const LoginForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // This will be handled by auth context later
-    console.log('Login form submitted:', formData);
   };
 
   return (

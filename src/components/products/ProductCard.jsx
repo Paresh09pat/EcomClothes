@@ -1,25 +1,82 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
-import { useWishlist } from '../../contexts/WishlistContext';
 import { ShoppingBagIcon, HeartIcon, StarIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const isProductInWishlist = isInWishlist(product.id);
+  const { 
+    isAuthenticated, 
+    toggleWishlist, 
+    isProductInWishlist, 
+    wishlistLoading 
+  } = useAuth();
+  const navigate = useNavigate();
+
   
+  // Handle imageUrls that might be a JSON string instead of array
+  let image;
+  if (product?.images?.length > 0) {
+    image = product.images;
+  } else if (product?.imageUrls) {
+    // Parse imageUrls if it's a string, otherwise use as-is
+    if (typeof product.imageUrls === 'string') {
+      try {
+        image = JSON.parse(product.imageUrls);
+      } catch (e) {
+        console.error('Error parsing imageUrls:', e);
+        image = [product.imageUrls]; // Fallback to single item array
+      }
+    } else {
+      image = product.imageUrls;
+    }
+  } else {
+    image = [];
+  }
+
   const handleAddToCart = (e) => {
     e.preventDefault();
-    addToCart(product);
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    // Create a cart-compatible product object with id instead of _id
+    const cartProduct = {
+      ...product,
+      id: product._id, // Map _id to id for cart context
+    };
+
+    addToCart(cartProduct);
+    toast.success('Product added to cart!');
   };
-  
-  const handleWishlistToggle = (e) => {
+
+  const handleWishlistToggle = async (e) => {
     e.preventDefault();
-    if (isProductInWishlist) {
-      removeFromWishlist(product.id);
-    } else {
-      addToWishlist(product);
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const wasInWishlist = isProductInWishlist(product._id);
+      const response = await toggleWishlist(product);
+      
+      if (response.status === 200) {
+        const message = wasInWishlist 
+          ? 'Product removed from wishlist!' 
+          : 'Product added to wishlist!';
+        toast.success(response.data.message || message);
+      }
+    } catch (error) {
+      console.error('Wishlist toggle error:', error);
+      toast.error('Failed to update wishlist. Please try again.');
     }
   };
 
@@ -27,44 +84,59 @@ const ProductCard = ({ product }) => {
   const originalPrice = product.price * 1.2; // Simulating original price
   const discountPercentage = Math.round(((originalPrice - product.price) / originalPrice) * 100);
 
+  // Check if product is in wishlist
+  const isInWishlist = isProductInWishlist(product._id);
+
   return (
     <div className="card group hover:shadow-xl transition-shadow duration-300">
       {/* Product Image with fixed height */}
-      <Link to={`/products/${product.id}`} className="block relative overflow-hidden">
+      <Link to={`/products/${product._id}`} className="block relative overflow-hidden">
         <div className="relative">
           {/* Discount tag */}
           <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
             {discountPercentage}% OFF
           </div>
-          
+
           {/* Wishlist button */}
-          <button 
+          <button
             onClick={handleWishlistToggle}
-            className="absolute top-2 right-2 z-10 bg-white p-1.5 rounded-full shadow-md hover:bg-gray-100"
+            disabled={wishlistLoading}
+            className={`absolute top-2 right-2 z-10 bg-white p-1.5 rounded-full shadow-md transition-all duration-200 ${
+              wishlistLoading 
+                ? 'opacity-50 cursor-not-allowed' 
+                : 'hover:bg-gray-100 hover:scale-110'
+            }`}
+            aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
           >
-            {isProductInWishlist ? (
+            {isInWishlist ? (
               <HeartIconSolid className="h-5 w-5 text-pink-500" />
             ) : (
               <HeartIcon className="h-5 w-5 text-gray-500 hover:text-pink-500" />
             )}
           </button>
-          
+
           <div className="h-64 overflow-hidden rounded-t-lg bg-gray-100">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="h-full w-full object-cover object-center transform transition-all duration-700 ease-in-out group-hover:scale-105"
-              style={{ height: '256px' }} /* Fixed height for consistency */
-            />
+            {image && image.length > 0 ? (
+              <img
+                src={image[0]} // Show only the first image
+                alt={product.name}
+                className="h-full w-full object-cover object-center transform transition-all duration-700 ease-in-out group-hover:scale-105"
+                style={{ height: '256px' }} /* Fixed height for consistency */
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-gray-200">
+                <span className="text-gray-400">No Image</span>
+              </div>
+            )}
           </div>
         </div>
-        
+
         {/* Quick view overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
           <span className="bg-white text-gray-900 px-4 py-2 rounded-md font-medium text-sm shadow-lg">Quick View</span>
         </div>
       </Link>
-      
+
       {/* Product Info */}
       <div className="p-4">
         <div className="flex items-center mb-1">
@@ -77,18 +149,18 @@ const ProductCard = ({ product }) => {
           </div>
           <span className="text-xs text-gray-500 ml-1">(4.0)</span>
         </div>
-        
-        <Link to={`/products/${product.id}`} className="block">
+
+        <Link to={`/products/${product._id}`} className="block">
           <h3 className="text-sm font-medium text-gray-700 line-clamp-2 hover:text-indigo-600 transition-colors">{product.name}</h3>
           <p className="mt-1 text-xs text-gray-500 capitalize">{product.category}</p>
-          
+
           <div className="mt-2 flex items-center">
             <span className="font-bold text-gray-900">₹{product.price.toFixed(2)}</span>
             <span className="ml-2 text-sm text-gray-500 line-through">₹{originalPrice.toFixed(2)}</span>
             <span className="ml-2 text-xs font-medium text-green-600">{discountPercentage}% off</span>
           </div>
         </Link>
-        
+
         <button
           onClick={handleAddToCart}
           className="mt-4 w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md flex items-center justify-center transition-colors"

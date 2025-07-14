@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import ProductGrid from '../components/products/ProductGrid';
+import { baseUrl } from '../utils/constant';
 
 // Sample products data
 const allProducts = [
@@ -96,39 +97,45 @@ const categoryInfo = {
   }
 };
 
+
+
 const CategoryPage = () => {
   const { categoryId } = useParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    // In a real app, this would be an API call
-    setLoading(true);
-    
-    // Filter products by category
-    const filteredProducts = allProducts.filter(
-      product => product.category === categoryId
-    );
-    
-    // Simulate API delay
-    setTimeout(() => {
-      setProducts(filteredProducts);
+
+  const getProducts = async () => {
+
+    try {
+      const response = await fetch(`${baseUrl}/v1/products/category/${categoryId}`);
+      const data = await response.json();
+      setProducts(data.products);
       setLoading(false);
-    }, 500);
-  }, [categoryId]);
+      return data;
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      return [];
+    }
+  }
   
+
+
+  useEffect(() => {
+    getProducts();
+  }, [categoryId]);
+
   const category = categoryInfo[categoryId] || {
     title: 'Products',
     description: 'Browse our collection of products.'
   };
-  
+
   return (
     <div className="container py-12">
       <header className="mb-12 text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">{category.title}</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">{category.description}</p>
       </header>
-      
+
       {loading ? (
         <div className="text-center py-12">
           <p>Loading products...</p>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
-import { useWishlist } from '../../contexts/WishlistContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   ShoppingBagIcon, 
   HeartIcon, 
@@ -12,6 +12,7 @@ import {
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { toast } from 'react-toastify';
 
 const ProductDetail = ({ product }) => {
   const { name, price, description, image, sizes, colors } = product;
@@ -21,8 +22,15 @@ const ProductDetail = ({ product }) => {
   const [activeTab, setActiveTab] = useState('description');
   
   const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const isProductInWishlist = isInWishlist(product.id);
+  const { 
+    isAuthenticated, 
+    toggleWishlist, 
+    isProductInWishlist, 
+    wishlistLoading 
+  } = useAuth();
+  const navigate = useNavigate();
+  
+  const isProductInWishlistState = isProductInWishlist(product.id || product._id);
   
   // Sample data for product details
   const originalPrice = price * 1.25; // 25% higher than current price
@@ -41,23 +49,39 @@ const ProductDetail = ({ product }) => {
   });
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
     addToCart({
       ...product,
       selectedSize,
       selectedColor,
       quantity,
     }, quantity);
+    toast.success('Product added to cart!');
   };
   
-  const handleWishlistToggle = () => {
-    if (isProductInWishlist) {
-      removeFromWishlist(product.id);
-    } else {
-      addToWishlist({
-        ...product,
-        selectedSize,
-        selectedColor
-      });
+  const handleWishlistToggle = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const wasInWishlist = isProductInWishlistState;
+      const response = await toggleWishlist(product);
+      
+      if (response.status === 200) {
+        const message = wasInWishlist 
+          ? 'Product removed from wishlist!' 
+          : 'Product added to wishlist!';
+        toast.success(response.data.message || message);
+      }
+    } catch (error) {
+      console.error('Wishlist toggle error:', error);
+      toast.error('Failed to update wishlist. Please try again.');
     }
   };
 
@@ -92,7 +116,7 @@ const ProductDetail = ({ product }) => {
                 onClick={handleWishlistToggle}
                 className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               >
-                {isProductInWishlist ? (
+                {isProductInWishlistState ? (
                   <HeartIconSolid className="h-5 w-5 text-pink-500" />
                 ) : (
                   <HeartIcon className="h-5 w-5 text-gray-500 hover:text-pink-500" />
@@ -108,9 +132,9 @@ const ProductDetail = ({ product }) => {
             <div className="mt-4 flex justify-between">
               <button 
                 onClick={handleWishlistToggle}
-                className={`flex-1 py-3 border font-medium rounded-md transition-colors mr-2 ${isProductInWishlist ? 'border-pink-600 text-pink-600 hover:bg-pink-50' : 'border-indigo-600 text-indigo-600 hover:bg-indigo-50'}`}
+                className={`flex-1 py-3 border font-medium rounded-md transition-colors mr-2 ${isProductInWishlistState ? 'border-pink-600 text-pink-600 hover:bg-pink-50' : 'border-indigo-600 text-indigo-600 hover:bg-indigo-50'}`}
               >
-                {isProductInWishlist ? (
+                {isProductInWishlistState ? (
                   <>
                     <HeartIconSolid className="h-5 w-5 inline-block mr-2 text-pink-600" />
                     Added to Wishlist

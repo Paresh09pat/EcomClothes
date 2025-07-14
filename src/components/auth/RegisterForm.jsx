@@ -17,7 +17,6 @@ const RegisterForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // This will be handled by auth context later
-    console.log('Register form submitted:', formData);
   };
 
   return (

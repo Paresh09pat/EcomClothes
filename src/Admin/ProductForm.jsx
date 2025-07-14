@@ -85,12 +85,11 @@ const ProductForm = () => {
             
                  
             // Debug: Log what we're sending
-            console.log("FormData contents:");
             for (let [key, value] of formDataToSend.entries()) {
                 if (value instanceof File) {
-                    console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
+                    // console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
                 } else {
-                    console.log(`${key}:`, value);
+                    // console.log(`${key}:`, value);
                 }
             }
             
@@ -101,9 +100,7 @@ const ProductForm = () => {
                 }
             });
 
-            console.log("res>>.", res);
             toast.success("Product created successfully");
-            
             // Reset form
             setFormData({
                 name: "",

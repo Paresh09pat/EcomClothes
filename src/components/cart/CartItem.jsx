@@ -1,17 +1,23 @@
 import { useCart } from '../../contexts/CartContext';
-import { useWishlist } from '../../contexts/WishlistContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { XMarkIcon, HeartIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { toast } from 'react-toastify';
 
 const CartItem = ({ item }) => {
   const { updateQuantity, removeFromCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { 
+    isAuthenticated, 
+    toggleWishlist, 
+    isProductInWishlist, 
+    wishlistLoading 
+  } = useAuth();
   
   // Calculate discount and original price for display
   const discountPercentage = 20; // Sample discount
   const originalPrice = item.price * 1.25; // 25% higher than current price
   
-  const isItemInWishlist = isInWishlist(item.id);
+  const isItemInWishlist = isProductInWishlist(item.id || item._id);
   
   const handleQuantityChange = (e) => {
     const newQuantity = parseInt(e.target.value);
@@ -25,6 +31,28 @@ const CartItem = ({ item }) => {
   const handleDecreaseQuantity = () => {
     if (item.quantity > 1) {
       updateQuantity(item.id, item.quantity - 1);
+    }
+  };
+
+  const handleWishlistToggle = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to manage your wishlist');
+      return;
+    }
+
+    try {
+      const wasInWishlist = isItemInWishlist;
+      const response = await toggleWishlist(item);
+      
+      if (response.status === 200) {
+        const message = wasInWishlist 
+          ? 'Product removed from wishlist!' 
+          : 'Product added to wishlist!';
+        toast.success(response.data.message || message);
+      }
+    } catch (error) {
+      console.error('Wishlist toggle error:', error);
+      toast.error('Failed to update wishlist. Please try again.');
     }
   };
   
@@ -115,7 +143,7 @@ const CartItem = ({ item }) => {
           <div className="flex items-center space-x-4">
             <button
               type="button"
-              onClick={() => isItemInWishlist ? removeFromWishlist(item.id) : addToWishlist(item)}
+              onClick={handleWishlistToggle}
               className={`${isItemInWishlist ? 'text-pink-500' : 'text-gray-500 hover:text-pink-500'} transition-colors`}
               aria-label={isItemInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             >
