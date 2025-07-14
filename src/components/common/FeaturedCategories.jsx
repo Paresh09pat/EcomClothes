@@ -3,7 +3,7 @@ import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
 const categories = [
   {
-    id: 'men',
+    id: 'Men',
     name: 'Men',
     image: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
     description: 'Shop the latest trends in men\'s fashion.',
@@ -11,7 +11,7 @@ const categories = [
     color: 'from-blue-500 to-indigo-600'
   },
   {
-    id: 'women',
+    id: 'Women',
     name: 'Women',
     image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
     description: 'Discover our collection of women\'s clothing.',

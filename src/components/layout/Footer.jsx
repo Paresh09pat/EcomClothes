@@ -71,8 +71,8 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4 text-indigo-300">Shop</h3>
             <ul className="space-y-3 text-gray-400 text-sm">
               {[
-                { name: 'Men', path: '/categories/men' },
-                { name: 'Women', path: '/categories/women' },
+                { name: 'Men', path: '/categories/Men' },
+                { name: 'Women', path: '/categories/Women' },
                 { name: 'Kids', path: '/categories/kids' },
                 { name: 'Accessories', path: '/categories/accessories' },
                 { name: 'New Arrivals', path: '#' },

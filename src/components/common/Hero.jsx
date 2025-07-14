@@ -84,7 +84,7 @@ const Hero = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link 
-                to="/categories/men" 
+                to="/categories/Men" 
                 className="px-8 py-4 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center group"
               >
                 <ShoppingBagIcon className="h-5 w-5 mr-2" />
@@ -93,7 +93,7 @@ const Hero = () => {
               </Link>
               
               <Link 
-                to="/categories/women" 
+                to="/categories/Women" 
                 className="px-8 py-4 bg-transparent border-2 border-white font-medium rounded-lg hover:bg-white hover:text-gray-900 transition-colors flex items-center justify-center group"
               >
                 <ShoppingBagIcon className="h-5 w-5 mr-2" />

@@ -24,6 +24,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ScrollToTop from './pages/ScrollToTop';
 
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-screen">
@@ -35,6 +36,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
+      <ScrollToTop />
         <ToastContainer />
         <AuthProvider>
           <CartProvider>
