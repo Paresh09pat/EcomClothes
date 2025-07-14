@@ -12,7 +12,7 @@ const Layout = () => {
   const { setUser } = useAuth();
 
   const getProfile = async () => {
-    const res = await axios.get(`${baseUrl}/user/profile`, {
+    const res = await axios.get(`${baseUrl}/v1/user/profile`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('_token_ecommerce')}`
       }
@@ -29,7 +29,7 @@ const Layout = () => {
       top: 0,
       behavior: 'smooth'
     });
-  }, [location.pathname]);
+  }, []);
 
   useEffect(() => {
     getProfile();

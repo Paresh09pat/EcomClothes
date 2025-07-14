@@ -11,10 +11,16 @@ export const AuthProvider = ({ children }) => {
 
 
   const login = (userData) => {
-    // In a real app, you would validate credentials with an API
     setUser(userData);
     console.log("dataUser>>.", userData);
     localStorage.setItem('_token_ecommerce', userData.token);
+    return true;
+  };
+
+  const adminlogin = (userData) => {
+    setUser(userData);
+    console.log("dataUser>>.", userData);
+    localStorage.setItem('_token_ecommerce_admin', userData.token);
     return true;
   };
 
@@ -29,12 +35,19 @@ export const AuthProvider = ({ children }) => {
     }, 300);
   };
 
+  const logoutAdmin = () => {
+    localStorage.removeItem('_token_ecommerce_admin');
+    setUser(null);
+  };
+
   const value = {
     user,
     loading,
     login,
     logout,
     setUser,
+    adminlogin,
+    logoutAdmin,
     isAuthenticated: !!user,
   };
 

@@ -78,7 +78,7 @@ const HomePage = () => {
       </section>
       
       <Testimonials />
-      <Newsletter />
+      {/* <Newsletter /> */}
     </div>
   );
 };

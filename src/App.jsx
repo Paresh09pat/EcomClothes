@@ -18,6 +18,9 @@ import WishlistPage from './pages/WishlistPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import ProductForm from './Admin/productform';
+import AdminLogin from './Admin/AdminLogin';
+import AdminProtect from './components/auth/AdminProtect';
 
 // Spinner for lazy loading
 const LoadingSpinner = () => (
@@ -36,11 +39,11 @@ function App() {
             <WishlistProvider>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-                 
+
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
 
-             
+
                   <Route
                     element={<Layout />}
                   >
@@ -49,7 +52,7 @@ function App() {
                     <Route path="categories/:categoryId" element={<CategoryPage />} />
                   </Route>
 
-                
+
                   <Route
                     element={
                       <ProtectedRoute>
@@ -64,11 +67,24 @@ function App() {
                     <Route path="wishlist" element={<WishlistPage />} />
                   </Route>
                 </Routes>
+
+
+
               </Suspense>
             </WishlistProvider>
           </CartProvider>
+
+          <Routes>
+            <Route path="/admin-login" element={<AdminLogin />} />
+
+            <Route path="/product-form" element={
+              <AdminProtect><ProductForm /></AdminProtect>} />
+          </Routes>
         </AuthProvider>
       </Router>
+
+
+
     </ErrorBoundary>
   );
 }

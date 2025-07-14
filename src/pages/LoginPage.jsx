@@ -11,7 +11,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -20,7 +20,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${baseUrl}/auth/login`, { email, password });
+      const res = await axios.post(`${baseUrl}/v1/auth/login`, { email, password });
       login(res?.data);
 
 
@@ -36,11 +36,7 @@ const LoginPage = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    if (localStorage.getItem('_token_ecommerce')) {
-      navigate('/');
-    }
-  }, []);
+
 
   return (
     <div className="container py-12">

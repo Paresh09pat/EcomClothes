@@ -48,7 +48,7 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${baseUrl}/auth/register`, formData);
+      const res = await axios.post(`${baseUrl}/v1/auth/register`, formData);
 
 
       if (res.status === 201) {
@@ -67,11 +67,7 @@ const RegisterPage = () => {
   };
 
 
-  useEffect(() => {
-    if (localStorage.getItem('_token_ecommerce')) {
-      navigate('/');
-    }
-  }, []);
+
 
   return (
     <div className="container py-12">

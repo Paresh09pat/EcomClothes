@@ -13,7 +13,7 @@ const Footer = () => {
     <footer className="bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Top Wave */}
       <div className="w-full overflow-hidden">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 48" className="w-full h-auto fill-white">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 48" className="w-full h-auto fill-indigo-50">
           <path d="M0,0L80,5.3C160,11,320,21,480,26.7C640,32,800,32,960,26.7C1120,21,1280,11,1360,5.3L1440,0L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"></path>
         </svg>
       </div>
