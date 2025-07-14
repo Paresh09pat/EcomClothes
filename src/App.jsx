@@ -18,7 +18,7 @@ import WishlistPage from './pages/WishlistPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import ProductForm from './Admin/productform';
+import ProductForm from './Admin/ProductForm';
 import AdminLogin from './Admin/AdminLogin';
 import AdminProtect from './components/auth/AdminProtect';
 
