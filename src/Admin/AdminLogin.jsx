@@ -4,12 +4,14 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { baseUrl } from '../utils/constant';
 import { toast } from 'react-toastify';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 const AdminLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const { adminlogin } = useAuth();
     const navigate = useNavigate();
@@ -22,7 +24,6 @@ const AdminLogin = () => {
         try {
             const res = await axios.post(`${baseUrl}/admin/login`, { email, password });
             adminlogin(res?.data);
-
 
             if (res.status === 200) {
                 navigate('/product-form');
@@ -75,14 +76,22 @@ const AdminLogin = () => {
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                 Password
                             </label>
-                            <input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 pr-10"
+                                />
+                                <div
+                                    className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                >
+                                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -129,4 +138,4 @@ const AdminLogin = () => {
     );
 };
 
-export default AdminLogin; 
+export default AdminLogin;

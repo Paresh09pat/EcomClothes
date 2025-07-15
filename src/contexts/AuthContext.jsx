@@ -13,8 +13,10 @@ export const AuthProvider = ({ children }) => {
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const token = localStorage.getItem('_token_ecommerce');
+  const adminToken = sessionStorage.getItem('_token_ecommerce_admin');
 
   const isAuthenticated = !!token
+  const isAdminAuthenticated = !!adminToken
 
   const login = (userData) => {
     setUser(userData);
@@ -24,7 +26,8 @@ export const AuthProvider = ({ children }) => {
 
   const adminlogin = (userData) => {
     setUser(userData);
-    localStorage.setItem('_token_ecommerce_admin', userData.token);
+    // Use sessionStorage for admin tokens so they logout when tab is closed
+    sessionStorage.setItem('_token_ecommerce_admin', userData.token);
     return true;
   };
 
@@ -39,7 +42,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logoutAdmin = () => {
-    localStorage.removeItem('_token_ecommerce_admin');
+    // Remove admin token from sessionStorage
+    sessionStorage.removeItem('_token_ecommerce_admin');
     setUser(null);
   };
 
@@ -72,6 +76,7 @@ export const AuthProvider = ({ children }) => {
       setWishlistLoading(false);
     }
   }
+
   // Get wishlist from server
   const getWishlist = async () => {
     if (!token) {
@@ -114,8 +119,10 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     token,
+    adminToken,
     logout,
     isAuthenticated,
+    isAdminAuthenticated,
     setUser,
     adminlogin,
     logoutAdmin,

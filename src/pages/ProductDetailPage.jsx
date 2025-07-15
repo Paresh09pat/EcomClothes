@@ -1,20 +1,43 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { baseUrl } from '../utils/constant';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState('');
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const fetchProduct = async () => {
     try {
       const response = await axios.get(`${baseUrl}/v1/products/${productId}`);
       setProduct(response.data.product);
+      
+      // Auto-select first size if available
+      const productData = response.data.product;
+      if (productData?.size) {
+        let availableSizes = [];
+        if (typeof productData.size === 'string') {
+          try {
+            availableSizes = JSON.parse(productData.size);
+          } catch (e) {
+            availableSizes = [productData.size];
+          }
+        } else {
+          availableSizes = productData.size;
+        }
+        if (availableSizes.length > 0) {
+          setSelectedSize(availableSizes[0]);
+        }
+      }
     } catch (error) {
       console.error("Error fetching product:", error);
     } finally {
@@ -41,6 +64,20 @@ const ProductDetailPage = () => {
     image = [];
   }
 
+  // Parse sizes if it's a string, otherwise use as-is
+  let availableSizes = [];
+  if (product?.size) {
+    if (typeof product.size === 'string') {
+      try {
+        availableSizes = JSON.parse(product.size);
+      } catch (e) {
+        console.error('Error parsing sizes:', e);
+        availableSizes = [product.size]; // Fallback to single item array
+      }
+    } else {
+      availableSizes = product.size;
+    }
+  }
 
   useEffect(() => {
     fetchProduct();
@@ -51,8 +88,27 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
     if (product) {
-      addToCart(product, quantity);
+      // Check if size selection is required
+      if (availableSizes.length > 0 && !selectedSize) {
+        toast.error('Please select a size before adding to cart');
+        return;
+      }
+
+      // Create a cart-compatible product object
+      const cartProduct = {
+        ...product,
+        id: product._id, // Map _id to id for cart context
+        selectedSize: selectedSize || null,
+      };
+
+      addToCart(cartProduct, quantity);
+      toast.success('Product added to cart!');
     }
   };
 
@@ -60,7 +116,8 @@ const ProductDetailPage = () => {
   if (loading) {
     return (
       <div className="container py-12 text-center">
-        <p className="text-gray-600">Loading product details...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+        <p className="text-gray-600 mt-4">Loading product details...</p>
       </div>
     );
   }
@@ -107,6 +164,40 @@ const ProductDetailPage = () => {
             <p className="mt-2 text-gray-600">{product.description}</p>
           </div>
 
+          {/* Size Selection */}
+          {availableSizes.length > 0 && (
+            <div className="mt-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">Select Size</h3>
+                <button className="text-sm text-indigo-600 hover:text-indigo-800">Size Guide</button>
+              </div>
+              <div className="mt-3">
+                <div className="flex items-center flex-wrap gap-3">
+                  {availableSizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      className={`
+                        relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase transition-all
+                        ${
+                          selectedSize === size
+                            ? 'border-indigo-600 bg-indigo-50 text-indigo-600 ring-2 ring-indigo-600'
+                            : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
+                        }
+                      `}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+                {selectedSize && (
+                  <p className="mt-2 text-sm text-indigo-600">Selected size: <span className="font-medium">{selectedSize}</span></p>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="mt-8">
             <div className="flex items-center">
               <label htmlFor="quantity" className="mr-4 text-sm font-medium text-gray-700">
@@ -130,9 +221,9 @@ const ProductDetailPage = () => {
             <button
               type="button"
               onClick={handleAddToCart}
-              className="mt-6 w-full btn bg-indigo-600 hover:bg-indigo-700"
+              className="mt-6 w-full btn bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-md transition-colors"
             >
-              Add to Cart
+              Add to Cart {availableSizes.length > 0 && selectedSize && `(Size: ${selectedSize})`}
             </button>
           </div>
 
@@ -142,6 +233,23 @@ const ProductDetailPage = () => {
               Free shipping on all orders over ₹5,000. Standard delivery 3-5 business days.
             </p>
           </div>
+
+          {/* Available Sizes Info */}
+          {availableSizes.length > 0 && (
+            <div className="mt-6 border-t border-gray-200 pt-6">
+              <h3 className="text-sm font-medium text-gray-900">Available Sizes</h3>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {availableSizes.map((size) => (
+                  <span
+                    key={size}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                  >
+                    {size}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

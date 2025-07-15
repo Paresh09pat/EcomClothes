@@ -15,9 +15,40 @@ import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroico
 import { toast } from 'react-toastify';
 
 const ProductDetail = ({ product }) => {
-  const { name, price, description, image, sizes, colors } = product;
-  const [selectedSize, setSelectedSize] = useState(sizes?.[0] || '');
-  const [selectedColor, setSelectedColor] = useState(colors?.[0] || '');
+  const { name, price, description, image } = product;
+  
+  // Parse sizes if it's a string, otherwise use as-is
+  let availableSizes = [];
+  if (product?.size) {
+    if (typeof product.size === 'string') {
+      try {
+        availableSizes = JSON.parse(product.size);
+      } catch (e) {
+        console.error('Error parsing sizes:', e);
+        availableSizes = [product.size]; // Fallback to single item array
+      }
+    } else {
+      availableSizes = product.size;
+    }
+  }
+
+  // Parse colors if it's a string, otherwise use as-is  
+  let availableColors = [];
+  if (product?.colors) {
+    if (typeof product.colors === 'string') {
+      try {
+        availableColors = JSON.parse(product.colors);
+      } catch (e) {
+        console.error('Error parsing colors:', e);
+        availableColors = [product.colors]; // Fallback to single item array
+      }
+    } else {
+      availableColors = product.colors;
+    }
+  }
+
+  const [selectedSize, setSelectedSize] = useState(availableSizes?.[0] || '');
+  const [selectedColor, setSelectedColor] = useState(availableColors?.[0] || '');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   
@@ -51,6 +82,12 @@ const ProductDetail = ({ product }) => {
   const handleAddToCart = () => {
     if (!isAuthenticated) {
       navigate('/login');
+      return;
+    }
+
+    // Check if size selection is required
+    if (availableSizes.length > 0 && !selectedSize) {
+      toast.error('Please select a size before adding to cart');
       return;
     }
 
@@ -207,7 +244,7 @@ const ProductDetail = ({ product }) => {
             </div>
 
             <div className="mt-8">
-              {sizes && sizes.length > 0 && (
+              {availableSizes && availableSizes.length > 0 && (
                 <div>
                   <div className="flex justify-between items-center">
                     <h3 className="text-sm font-medium text-gray-900">Select Size</h3>
@@ -215,7 +252,7 @@ const ProductDetail = ({ product }) => {
                   </div>
                   <div className="mt-3">
                     <div className="flex items-center flex-wrap gap-3">
-                      {sizes.map((size) => (
+                      {availableSizes.map((size) => (
                         <button
                           key={size}
                           type="button"
@@ -239,12 +276,12 @@ const ProductDetail = ({ product }) => {
             </div>
 
             <div className="mt-6">
-              {colors && colors.length > 0 && (
+              {availableColors && availableColors.length > 0 && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-900">Select Color</h3>
                   <div className="mt-3">
                     <div className="flex items-center space-x-4">
-                      {colors.map((color) => (
+                      {availableColors.map((color) => (
                         <button
                           key={color}
                           type="button"

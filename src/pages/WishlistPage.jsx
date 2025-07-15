@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { useAuth } from '../contexts/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 const WishlistPage = () => {
@@ -21,7 +21,7 @@ const WishlistPage = () => {
     wishlistLoading, 
     isAuthenticated 
   } = useAuth();
-
+  const [selectedSizes, setSelectedSizes] = useState({});
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,12 +42,41 @@ const WishlistPage = () => {
     }
   };
 
+  // Function to handle size selection for a specific product
+  const handleSizeSelect = (productId, size) => {
+    setSelectedSizes(prev => ({
+      ...prev,
+      [productId]: size
+    }));
+  };
+
   // Function to handle moving item to cart
   const handleMoveToCart = (product) => {
+    // Parse available sizes
+    let availableSizes = [];
+    if (product?.size) {
+      if (typeof product.size === 'string') {
+        try {
+          availableSizes = JSON.parse(product.size);
+        } catch (e) {
+          availableSizes = [product.size];
+        }
+      } else {
+        availableSizes = product.size;
+      }
+    }
+
+    // Check if size selection is required
+    if (availableSizes.length > 0 && !selectedSizes[product._id]) {
+      toast.error('Please select a size before adding to cart');
+      return;
+    }
+
     // Create a cart-compatible product object with id instead of _id
     const cartProduct = {
       ...product,
       id: product._id, // Map _id to id for cart context
+      selectedSize: selectedSizes[product._id] || null,
     };
     
     addToCart(cartProduct);
@@ -151,6 +180,20 @@ const WishlistPage = () => {
                     image = '';
                   }
 
+                  // Parse available sizes
+                  let availableSizes = [];
+                  if (item?.size) {
+                    if (typeof item.size === 'string') {
+                      try {
+                        availableSizes = JSON.parse(item.size);
+                      } catch (e) {
+                        availableSizes = [item.size];
+                      }
+                    } else {
+                      availableSizes = item.size;
+                    }
+                  }
+
                   const originalPrice = item.price * 1.2;
                   const discountPercentage = Math.round(((originalPrice - item.price) / originalPrice) * 100);
 
@@ -206,6 +249,41 @@ const WishlistPage = () => {
                             <p className="ml-2 text-sm text-gray-500 line-through">₹{originalPrice.toFixed(2)}</p>
                           )}
                         </div>
+
+                        {/* Available Sizes */}
+                        {availableSizes.length > 0 && (
+                          <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                              Select Size:
+                            </label>
+                            <div className="flex flex-wrap gap-1">
+                              {availableSizes.map((size) => (
+                                <label key={size} className="relative cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`size-${item._id}`}
+                                    value={size}
+                                    checked={selectedSizes[item._id] === size}
+                                    onChange={() => handleSizeSelect(item._id, size)}
+                                    className="sr-only"
+                                  />
+                                  <span
+                                    className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 text-xs font-medium border rounded transition-all ${
+                                      selectedSizes[item._id] === size
+                                        ? 'border-indigo-600 bg-indigo-600 text-white'
+                                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                    }`}
+                                  >
+                                    {size}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                            {selectedSizes[item._id] && (
+                              <p className="text-xs text-indigo-600 mt-1">Selected: {selectedSizes[item._id]}</p>
+                            )}
+                          </div>
+                        )}
                         
                         <div className="flex space-x-2">
                           <button

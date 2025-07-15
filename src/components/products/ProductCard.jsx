@@ -4,6 +4,7 @@ import { ShoppingBagIcon, HeartIcon, StarIcon } from '@heroicons/react/24/outlin
 import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
+import { useState } from 'react';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -14,8 +15,8 @@ const ProductCard = ({ product }) => {
     wishlistLoading 
   } = useAuth();
   const navigate = useNavigate();
+  const [selectedSize, setSelectedSize] = useState('');
 
-  
   // Handle imageUrls that might be a JSON string instead of array
   let image;
   if (product?.images?.length > 0) {
@@ -36,6 +37,21 @@ const ProductCard = ({ product }) => {
     image = [];
   }
 
+  // Parse sizes if it's a string, otherwise use as-is
+  let availableSizes = [];
+  if (product?.size) {
+    if (typeof product.size === 'string') {
+      try {
+        availableSizes = JSON.parse(product.size);
+      } catch (e) {
+        console.error('Error parsing sizes:', e);
+        availableSizes = [product.size]; // Fallback to single item array
+      }
+    } else {
+      availableSizes = product.size;
+    }
+  }
+
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -45,14 +61,22 @@ const ProductCard = ({ product }) => {
       return;
     }
 
+    // Check if size selection is required
+    if (availableSizes.length > 0 && !selectedSize) {
+      toast.error('Please select a size before adding to cart');
+      return;
+    }
+
     // Create a cart-compatible product object with id instead of _id
     const cartProduct = {
       ...product,
       id: product._id, // Map _id to id for cart context
+      selectedSize: selectedSize || null,
     };
 
     addToCart(cartProduct);
     toast.success('Product added to cart!');
+    setSelectedSize(''); // Reset size selection after adding to cart
   };
 
   const handleWishlistToggle = async (e) => {
@@ -88,7 +112,7 @@ const ProductCard = ({ product }) => {
   const isInWishlist = isProductInWishlist(product._id);
 
   return (
-    <div className="card group hover:shadow-xl transition-shadow duration-300">
+    <div className="card group hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
       {/* Product Image with fixed height */}
       <Link to={`/products/${product._id}`} className="block relative overflow-hidden">
         <div className="relative">
@@ -137,8 +161,8 @@ const ProductCard = ({ product }) => {
         </div>
       </Link>
 
-      {/* Product Info */}
-      <div className="p-4">
+      {/* Product Info - Flexible content area */}
+      <div className="p-4 flex-1 flex flex-col">
         <div className="flex items-center mb-1">
           <div className="flex text-yellow-400">
             <StarIconSolid className="h-4 w-4" />
@@ -150,7 +174,7 @@ const ProductCard = ({ product }) => {
           <span className="text-xs text-gray-500 ml-1">(4.0)</span>
         </div>
 
-        <Link to={`/products/${product._id}`} className="block">
+        <Link to={`/products/${product._id}`} className="block flex-1">
           <h3 className="text-sm font-medium text-gray-700 line-clamp-2 hover:text-indigo-600 transition-colors">{product.name}</h3>
           <p className="mt-1 text-xs text-gray-500 capitalize">{product.category}</p>
 
@@ -161,6 +185,47 @@ const ProductCard = ({ product }) => {
           </div>
         </Link>
 
+        {/* Available Sizes - Fixed height section */}
+        <div className="mt-3" style={{ minHeight: availableSizes.length > 0 ? '80px' : '20px' }}>
+          {availableSizes.length > 0 && (
+            <>
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                Available Sizes:
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {availableSizes.map((size) => (
+                  <label key={size} className="relative cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`size-${product._id}`}
+                      value={size}
+                      checked={selectedSize === size}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setSelectedSize(size);
+                      }}
+                      className="sr-only"
+                    />
+                    <span
+                      className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 text-xs font-medium border rounded transition-all ${
+                        selectedSize === size
+                          ? 'border-indigo-600 bg-indigo-600 text-white'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                      }`}
+                    >
+                      {size}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {availableSizes.length > 0 && selectedSize && (
+                <p className="text-xs text-indigo-600 mt-1">Selected: {selectedSize}</p>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Button - Always at bottom */}
         <button
           onClick={handleAddToCart}
           className="mt-4 w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md flex items-center justify-center transition-colors"
