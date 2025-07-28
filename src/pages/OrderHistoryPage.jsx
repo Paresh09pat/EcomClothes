@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
+import { baseUrl } from '../utils/constant';
 import { 
   ShoppingBagIcon, 
   TruckIcon, 
@@ -11,44 +13,39 @@ import {
 } from '@heroicons/react/24/outline';
 
 const OrderHistoryPage = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   useEffect(() => {
-    // In a real app, you would fetch orders from an API
-    // For now, we'll use localStorage as a simple example
-    const fetchOrders = () => {
-      setLoading(true);
+    const fetchOrders = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const savedOrder = localStorage.getItem('latestOrder');
-        if (savedOrder) {
-          // Create a few sample orders based on the latest order
-          const latestOrder = JSON.parse(savedOrder);
-          
-          // Generate some sample past orders
-          const sampleOrders = [
-            latestOrder,
-            {
-              ...latestOrder,
-              id: 'ORD-' + Math.floor(Math.random() * 10000),
-              date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-              status: 'delivered'
-            },
-            {
-              ...latestOrder,
-              id: 'ORD-' + Math.floor(Math.random() * 10000),
-              date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
-              status: 'delivered'
-            }
-          ];
-          
-          setOrders(sampleOrders);
+        setLoading(true);
+        setError(null);
+        
+        const response = await axios.get(`${baseUrl}/v1/orders`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log("Orders fetched:", response.data);
+        
+        if (response.data.orders && response.data.orders.length > 0) {
+          setOrders(response.data.orders);
         } else {
           setOrders([]);
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        setError('Failed to load orders. Please try again later.');
         setOrders([]);
       } finally {
         setLoading(false);
@@ -56,7 +53,7 @@ const OrderHistoryPage = () => {
     };
     
     fetchOrders();
-  }, []);
+  }, [token]);
   
   // Function to check if an order is within the return period (7 days)
   const isWithinReturnPeriod = (orderDate) => {
@@ -70,6 +67,29 @@ const OrderHistoryPage = () => {
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-IN', options);
+  };
+
+  // Function to get status color
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'shipped':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Function to handle return order
+  const handleReturnOrder = (orderId) => {
+    alert(`Return process initiated for order #${orderId.slice(-8).toUpperCase()}. Please check your email for return instructions.`);
   };
   
   if (!user) {
@@ -118,6 +138,20 @@ const OrderHistoryPage = () => {
           </div>
         </div>
         
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+            <h2 className="text-red-800 font-semibold mb-2">Error</h2>
+            <p className="text-red-600">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-3 text-red-600 hover:text-red-800 font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+        
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
@@ -135,39 +169,37 @@ const OrderHistoryPage = () => {
         ) : (
           <div className="space-y-6">
             {orders.map((order) => {
-              const isReturnable = isWithinReturnPeriod(order.date);
+              const isReturnable = isWithinReturnPeriod(order.createdAt);
+              const orderDate = new Date(order.createdAt);
+              const estimatedDelivery = new Date(orderDate.getTime() + 5 * 24 * 60 * 60 * 1000);
               
               return (
-                <div key={order.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100">
+                <div key={order._id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100">
                   {/* Order Header */}
                   <div className="bg-gray-50 p-4 border-b border-gray-100">
                     <div className="flex flex-wrap items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-500">ORDER PLACED</p>
-                        <p className="font-medium">{formatDate(order.date)}</p>
+                        <p className="font-medium">{formatDate(order.createdAt)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">TOTAL</p>
-                        <p className="font-medium">₹{order.total.toFixed(2)}</p>
+                        <p className="font-medium">₹{order.totalAmount.toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">ORDER ID</p>
-                        <p className="font-medium">{order.id}</p>
+                        <p className="font-medium">#{order._id.slice(-8).toUpperCase()}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">PAYMENT</p>
+                        <p className="font-medium capitalize">
+                          {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod}
+                        </p>
                       </div>
                       <div className="mt-2 sm:mt-0">
-                        {order.status === 'processing' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Processing
-                          </span>
-                        ) : order.status === 'shipped' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Shipped
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Delivered
-                          </span>
-                        )}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -176,18 +208,35 @@ const OrderHistoryPage = () => {
                   <div className="p-4">
                     <div className="space-y-4">
                       {order.items.map((item) => (
-                        <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center py-2 border-b border-gray-100 last:border-0">
+                        <div key={item._id} className="flex flex-col sm:flex-row items-start sm:items-center py-2 border-b border-gray-100 last:border-0">
                           <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                            <img 
+                              src={item.product.images  && item.product.images.length > 0 
+                                ? item.product.images[0]
+                                : '/placeholder-image.jpg'
+                              } 
+                              alt={item.product.name} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = '/placeholder-image.jpg';
+                              }}
+                            />
                           </div>
                           <div className="flex-1 ml-0 sm:ml-4 mt-2 sm:mt-0">
-                            <h3 className="font-medium text-gray-900">{item.name}</h3>
+                            <h3 className="font-medium text-gray-900">{item.product.name}</h3>
                             <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
-                            {item.size && <p className="text-sm text-gray-500">Size: {item.size}</p>}
-                            {item.color && <p className="text-sm text-gray-500">Color: {item.color}</p>}
+                            <p className="text-sm text-gray-500">Category: {item.product.category}</p>
+                            {item.product.description && (
+                              <p className="text-xs text-gray-400 mt-1 truncate max-w-xs">
+                                {item.product.description.length > 40 
+                                  ? `${item.product.description.substring(0, 40)}...` 
+                                  : item.product.description
+                                }
+                              </p>
+                            )}
                           </div>
                           <div className="mt-2 sm:mt-0">
-                            <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
+                            <p className="font-medium">₹{(item.product.price * item.quantity).toLocaleString()}</p>
                           </div>
                         </div>
                       ))}
@@ -199,23 +248,24 @@ const OrderHistoryPage = () => {
                     <div className="flex items-center">
                       <TruckIcon className="h-5 w-5 text-gray-400 mr-2" />
                       <span className="text-sm">
-                        {order.status === 'delivered' ? 'Delivered on ' : 'Expected delivery by '}
-                        <span className="font-medium">{formatDate(new Date(new Date(order.date).getTime() + 5 * 24 * 60 * 60 * 1000))}</span>
+                        {order.status.toLowerCase() === 'delivered' ? 'Delivered on ' : 'Expected delivery by '}
+                        <span className="font-medium">{formatDate(estimatedDelivery)}</span>
                       </span>
                     </div>
                     <div className="mt-2 sm:mt-0 flex space-x-3">
                       <Link 
-                        to={`#`} 
+                        to={`/order-confirmation`} 
+                        state={{ orderId: order._id }}
                         className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center"
                       >
                         View Details
                         <ChevronRightIcon className="h-4 w-4 ml-1" />
                       </Link>
                       
-                      {isReturnable && order.status === 'delivered' && (
+                      {isReturnable && order.status.toLowerCase() === 'delivered' && (
                         <button 
                           className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
-                          onClick={() => alert('Return process initiated. Please check your email for return instructions.')}
+                          onClick={() => handleReturnOrder(order._id)}
                         >
                           Return Order
                           <ArrowPathIcon className="h-4 w-4 ml-1" />

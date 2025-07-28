@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapPinIcon, ShieldCheckIcon, TruckIcon, BanknotesIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 
-const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
+const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total = 0 }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: initialValues.firstName || '',
@@ -17,7 +17,76 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
     ...initialValues
   });
 
+  const [errors, setErrors] = useState({});
   const [addressType, setAddressType] = useState('home');
+
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    const phoneRegex = /^[6-9]\d{9}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const validatePinCode = (pinCode) => {
+    const pinRegex = /^[1-9][0-9]{5}$/;
+    return pinRegex.test(pinCode);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Required field validations
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!validatePhone(formData.phone)) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (formData.address.trim().length < 10) {
+      newErrors.address = 'Address must be at least 10 characters';
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = 'City is required';
+    }
+
+    if (!formData.state.trim()) {
+      newErrors.state = 'State is required';
+    }
+
+    if (!formData.zipCode.trim()) {
+      newErrors.zipCode = 'PIN code is required';
+    } else if (!validatePinCode(formData.zipCode)) {
+      newErrors.zipCode = 'Please enter a valid 6-digit PIN code';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,18 +94,29 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
       ...prev,
       [name]: value
     }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({...formData, addressType});
+    
+    if (validateForm()) {
+      onSubmit({...formData, addressType});
+    }
   };
 
-  // Calculate totals
-  const subtotal = 2499.98; // Sample subtotal
-  const discount = subtotal * 0.05; // 5% discount
+  // Calculate totals from actual cart data
+  const subtotal = total;
+  const discount = 0; // No discount for now
   const shipping = 0;
-  const total = subtotal + shipping - discount;
+  const finalTotal = subtotal + shipping - discount;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -60,9 +140,14 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 block w-full border rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                  errors.firstName ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="Enter your first name"
               />
+              {errors.firstName && (
+                <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+              )}
             </div>
             
             {/* Last Name */}
@@ -77,9 +162,14 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
                 value={formData.lastName}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 block w-full border rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                  errors.lastName ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="Enter your last name"
               />
+              {errors.lastName && (
+                <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+              )}
             </div>
             
             {/* Email */}
@@ -94,9 +184,14 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 block w-full border rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                  errors.email ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="example@email.com"
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
             
             {/* Phone */}
@@ -115,11 +210,18 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  maxLength="10"
+                  className={`block w-full pl-10 border rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    errors.phone ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="Enter your 10-digit mobile number"
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">We'll send order updates to this number</p>
+              {errors.phone ? (
+                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">We'll send order updates to this number</p>
+              )}
             </div>
             
             {/* Address */}
@@ -138,10 +240,15 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
                   value={formData.address}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className={`block w-full pl-10 border rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    errors.address ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="House No., Building Name, Street, Area"
                 />
               </div>
+              {errors.address && (
+                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+              )}
             </div>
             
             {/* Address Type */}
@@ -179,9 +286,14 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
                 value={formData.city}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 block w-full border rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                  errors.city ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="Enter your city"
               />
+              {errors.city && (
+                <p className="mt-1 text-sm text-red-600">{errors.city}</p>
+              )}
             </div>
             
             {/* State */}
@@ -196,9 +308,14 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
                 value={formData.state}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className={`mt-1 block w-full border rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                  errors.state ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="Enter your state"
               />
+              {errors.state && (
+                <p className="mt-1 text-sm text-red-600">{errors.state}</p>
+              )}
             </div>
             
             {/* Zip Code */}
@@ -213,9 +330,15 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
                 value={formData.zipCode}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                maxLength="6"
+                className={`mt-1 block w-full border rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                  errors.zipCode ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="6-digit PIN code"
               />
+              {errors.zipCode && (
+                <p className="mt-1 text-sm text-red-600">{errors.zipCode}</p>
+              )}
             </div>
           </div>
           
@@ -265,7 +388,7 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {} }) => {
             </div>
             <div className="flex justify-between pt-2 border-t border-gray-200 mt-2">
               <span className="text-base font-bold">Total:</span>
-              <span className="text-base font-bold">₹{total.toFixed(2)}</span>
+              <span className="text-base font-bold">₹{finalTotal.toFixed(2)}</span>
             </div>
           </div>
           

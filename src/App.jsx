@@ -25,6 +25,8 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ScrollToTop from './components/common/ScrollToTop';
+import AdminDashboard from './Admin/AdminDashboard';
+import ProductManagement from './Admin/ProductManagement';
 
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-screen">
@@ -47,6 +49,9 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/admin-login" element={<AdminLogin />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/product-management" element={<ProductManagement />} />
+
 
                 {/* Admin Protected Route */}
                 <Route

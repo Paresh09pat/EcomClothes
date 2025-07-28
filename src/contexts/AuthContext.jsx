@@ -11,6 +11,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [isRemoved,setIsRemoved] = useState(false);
+  const [cartItems,setCartitems] = useState(true)
+  const [itemsCart,setItemsCart]=useState(0)
+  console.log("cart>>>",itemsCart)
 
   const token = localStorage.getItem('_token_ecommerce');
   const adminToken = sessionStorage.getItem('_token_ecommerce_admin');
@@ -77,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  
   // Get wishlist from server
   const getWishlist = async () => {
     if (!token) {
@@ -91,6 +96,7 @@ export const AuthProvider = ({ children }) => {
         }
       });
       setWishlist(response.data.products || []);
+      setItemsCart(response?.data?.cartCount)
       return response.data.products;
     }
     catch (err) {
@@ -112,7 +118,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       setWishlist([]);
     }
-  }, [token, isAuthenticated]);
+  }, [cartItems]);
 
   const value = {
     user,
@@ -130,9 +136,13 @@ export const AuthProvider = ({ children }) => {
     wishlistLoading,
     isProductInWishlist,
     toggleWishlist,
+    cartItems,
     getWishlist,
-    // Keep the old function name for backward compatibility but use the new toggle
     addToWishlist: toggleWishlist,
+    isRemoved,
+    setIsRemoved,
+    setCartitems,
+    itemsCart
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,22 +1,23 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../../contexts/CartContext';
-import { ShoppingBagIcon, HeartIcon, StarIcon } from '@heroicons/react/24/outline';
-import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import { useAuth } from '../../contexts/AuthContext';
-import { toast } from 'react-toastify';
+import { HeartIcon, ShoppingBagIcon, StarIcon } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import axios from 'axios';
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useAuth } from '../../contexts/AuthContext';
+import { baseUrl } from '../../utils/constant';
 
 const ProductCard = ({ product }) => {
-  const { addToCart } = useCart();
-  const { 
-    isAuthenticated, 
-    toggleWishlist, 
-    isProductInWishlist, 
-    wishlistLoading 
+  const {
+    isAuthenticated,
+    toggleWishlist,
+    isProductInWishlist,
+    wishlistLoading,
+    setCartitems
   } = useAuth();
   const navigate = useNavigate();
   const [selectedSize, setSelectedSize] = useState('');
-
+  const { token } = useAuth()
   // Handle imageUrls that might be a JSON string instead of array
   let image;
   if (product?.images?.length > 0) {
@@ -52,32 +53,40 @@ const ProductCard = ({ product }) => {
     }
   }
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e, product) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isAuthenticated) {
-      navigate('/login');
+    if (selectedSize === '') {
+      toast.error('Please select a size');
       return;
     }
 
-    // Check if size selection is required
-    if (availableSizes.length > 0 && !selectedSize) {
-      toast.error('Please select a size before adding to cart');
-      return;
+    try {
+      const res = await axios.post(`${baseUrl}/v1/cart/add`,
+        {
+          productId: product._id,
+          quantity: 1,
+          size: selectedSize
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        });
+
+
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate('/cart');
+        setCartitems((prev)=>!prev)
+      }
+    } catch (err) {
+      console.log(err.response.data.message);
+      toast.error(err.response.data.message);
     }
+  }
 
-    // Create a cart-compatible product object with id instead of _id
-    const cartProduct = {
-      ...product,
-      id: product._id, // Map _id to id for cart context
-      selectedSize: selectedSize || null,
-    };
-
-    addToCart(cartProduct);
-    toast.success('Product added to cart!');
-    setSelectedSize(''); // Reset size selection after adding to cart
-  };
 
   const handleWishlistToggle = async (e) => {
     e.preventDefault();
@@ -91,10 +100,10 @@ const ProductCard = ({ product }) => {
     try {
       const wasInWishlist = isProductInWishlist(product._id);
       const response = await toggleWishlist(product);
-      
+
       if (response.status === 200) {
-        const message = wasInWishlist 
-          ? 'Product removed from wishlist!' 
+        const message = wasInWishlist
+          ? 'Product removed from wishlist!'
           : 'Product added to wishlist!';
         toast.success(response.data.message || message);
       }
@@ -113,23 +122,22 @@ const ProductCard = ({ product }) => {
 
   return (
     <div className="card group hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
-      {/* Product Image with fixed height */}
+
       <Link to={`/products/${product._id}`} className="block relative overflow-hidden">
         <div className="relative">
-          {/* Discount tag */}
+
           <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
             {discountPercentage}% OFF
           </div>
 
-          {/* Wishlist button */}
+
           <button
             onClick={handleWishlistToggle}
             disabled={wishlistLoading}
-            className={`absolute top-2 right-2 z-10 bg-white p-1.5 rounded-full shadow-md transition-all duration-200 ${
-              wishlistLoading 
-                ? 'opacity-50 cursor-not-allowed' 
-                : 'hover:bg-gray-100 hover:scale-110'
-            }`}
+            className={`absolute top-2 right-2 z-10 bg-white p-1.5 rounded-full shadow-md transition-all duration-200 ${wishlistLoading
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-gray-100 hover:scale-110'
+              }`}
             aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
           >
             {isInWishlist ? (
@@ -207,11 +215,10 @@ const ProductCard = ({ product }) => {
                       className="sr-only"
                     />
                     <span
-                      className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 text-xs font-medium border rounded transition-all ${
-                        selectedSize === size
-                          ? 'border-indigo-600 bg-indigo-600 text-white'
-                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                      }`}
+                      className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 text-xs font-medium border rounded transition-all ${selectedSize === size
+                        ? 'border-indigo-600 bg-indigo-600 text-white'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                        }`}
                     >
                       {size}
                     </span>
@@ -227,7 +234,7 @@ const ProductCard = ({ product }) => {
 
         {/* Button - Always at bottom */}
         <button
-          onClick={handleAddToCart}
+          onClick={(e) => handleAddToCart(e, product)}
           className="mt-4 w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md flex items-center justify-center transition-colors"
         >
           <ShoppingBagIcon className="h-4 w-4 mr-2" />

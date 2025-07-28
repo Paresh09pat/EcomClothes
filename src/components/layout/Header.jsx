@@ -17,7 +17,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, logout, wishlist } = useAuth();
+  const { user, logout, wishlist,itemsCart } = useAuth();
   const { itemCount } = useCart();
   const location = useLocation();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -62,6 +62,7 @@ const Header = () => {
   ];
 
 
+  console.log("wishlist",wishlist)
  
 
   return (
@@ -147,9 +148,9 @@ const Header = () => {
                   aria-label="Cart"
                 >
                   <ShoppingBagIcon className="h-6 w-6" />
-                  {itemCount > 0 && (
+                  {itemsCart > 0 && (
                     <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {itemCount}
+                      {itemsCart}
                     </span>
                   )}
                 </Link>

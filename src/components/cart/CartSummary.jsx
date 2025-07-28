@@ -29,7 +29,7 @@ const CartSummary = ({ cartItems }) => {
       <div className="mt-6 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">Price ({cartItems.length} items)</p>
-          <p className="text-sm font-medium text-gray-900">₹{subtotal.toFixed(2)}</p>
+          <p className="text-sm font-medium text-gray-900">₹{subtotal.toFixed(2)}`</p>
         </div>
         
         <div className="flex items-center justify-between">

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { baseUrl } from "../utils/constant";
 
 const ProductForm = () => {
     const navigate = useNavigate();
     const { logoutAdmin, isAdminAuthenticated, adminToken } = useAuth();
-    
+
     const [formData, setFormData] = useState({
         name: "",
         description: "",
@@ -82,7 +82,7 @@ const ProductForm = () => {
 
         try {
             let res;
-            
+
             // Always send as FormData to handle file uploads
             const formDataToSend = new FormData();
             formDataToSend.append('name', formData.name);
@@ -91,7 +91,7 @@ const ProductForm = () => {
             formDataToSend.append('category', formData.category);
             formDataToSend.append('size', JSON.stringify(formData.size));
             formDataToSend.append('isFeatured', formData.is_featured); // Send as boolean
-            
+
             // Handle main images
             if (imageUploadMethod === "file" && imageFiles.length > 0) {
                 // Send file uploads
@@ -102,8 +102,8 @@ const ProductForm = () => {
                 // Send URL images as JSON
                 formDataToSend.append('imageUrls', JSON.stringify(formData.images));
             }
-            
-                 
+
+
             // Debug: Log what we're sending
             for (let [key, value] of formDataToSend.entries()) {
                 if (value instanceof File) {
@@ -112,7 +112,7 @@ const ProductForm = () => {
                     // console.log(`${key}:`, value);
                 }
             }
-            
+
             res = await axios.post(`${baseUrl}/admin/add-product`, formDataToSend, {
                 headers: {
                     Authorization: `Bearer ${adminToken}`,
@@ -137,7 +137,7 @@ const ProductForm = () => {
         } catch (err) {
             console.error("Full error:", err);
             console.error("Error response:", err?.response?.data);
-            
+
             // Handle session expiry
             if (err?.response?.status === 401) {
                 toast.error("Admin session expired. Please login again.");
@@ -145,7 +145,7 @@ const ProductForm = () => {
                 navigate("/admin-login");
                 return;
             }
-            
+
             toast.error(err?.response?.data?.message || "Error creating product");
         }
     };
@@ -181,6 +181,16 @@ const ProductForm = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <div className=" my-6">
+                    <Link to="/admin-dashboard">
+                        <button
+                            className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-200 ease-in-out"
+                        >
+                            Go To Dashboard
+                        </button>
+                    </Link>
                 </div>
 
                 {/* Product Form */}
@@ -370,7 +380,7 @@ const ProductForm = () => {
                                 </div>
                             ))}
                         </div>
-                    </div>          
+                    </div>
 
                     <div className="flex items-center space-x-2">
                         <label className="block mb-1 font-medium">Is Featured</label>

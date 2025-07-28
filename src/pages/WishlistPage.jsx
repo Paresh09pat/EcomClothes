@@ -25,7 +25,7 @@ const WishlistPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      getWishlist();
+    getWishlist();
     }
   }, [isAuthenticated]);
 
@@ -109,7 +109,7 @@ const WishlistPage = () => {
       </div>
     );
   }
-
+  
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,7 +123,7 @@ const WishlistPage = () => {
             >
               <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
             </Link>
-            <div>
+          <div>
               <h1 className="text-2xl font-bold text-gray-900">My Wishlist</h1>
               <p className="text-sm text-gray-500">
                 {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'} saved
@@ -133,7 +133,7 @@ const WishlistPage = () => {
           
           <HeartIconSolid className="h-8 w-8 text-pink-500" />
         </div>
-
+        
         {/* Wishlist Content */}
         {wishlistLoading ? (
           <div className="text-center py-12">
@@ -195,19 +195,19 @@ const WishlistPage = () => {
                   }
 
                   const originalPrice = item.price * 1.2;
-                  const discountPercentage = Math.round(((originalPrice - item.price) / originalPrice) * 100);
-
-                  return (
+                const discountPercentage = Math.round(((originalPrice - item.price) / originalPrice) * 100);
+                
+                return (
                     <div key={item._id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 relative group">
-                      {/* Discount tag */}
-                      {discountPercentage > 0 && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                          {discountPercentage}% OFF
-                        </div>
-                      )}
-                      
-                      {/* Remove button */}
-                      <button
+                    {/* Discount tag */}
+                    {discountPercentage > 0 && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        {discountPercentage}% OFF
+                      </div>
+                    )}
+                    
+                    {/* Remove button */}
+                    <button
                         onClick={() => handleRemoveFromWishlist(item)}
                         disabled={wishlistLoading}
                         className={`absolute top-2 right-2 bg-white rounded-full p-1 shadow-sm transition-all z-10 ${
@@ -215,40 +215,40 @@ const WishlistPage = () => {
                             ? 'opacity-50 cursor-not-allowed' 
                             : 'opacity-0 group-hover:opacity-100 hover:bg-red-50'
                         }`}
-                        aria-label="Remove from wishlist"
-                      >
+                      aria-label="Remove from wishlist"
+                    >
                         <XMarkIcon className="h-4 w-4 text-gray-500 hover:text-red-500" />
-                      </button>
-                      
-                      {/* Product Image */}
+                    </button>
+                    
+                    {/* Product Image */}
                       <Link to={`/products/${item._id}`} className="block relative h-48 overflow-hidden">
                         {image ? (
-                          <img 
+                      <img 
                             src={image}
-                            alt={item.name} 
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
+                        alt={item.name} 
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gray-200">
                             <span className="text-gray-400">No Image</span>
                           </div>
                         )}
-                      </Link>
-                      
-                      {/* Product Details */}
-                      <div className="p-4">
+                    </Link>
+                    
+                    {/* Product Details */}
+                    <div className="p-4">
                         <Link to={`/products/${item._id}`} className="block">
                           <h3 className="text-lg font-medium text-gray-900 mb-1 hover:text-indigo-600 transition-colors line-clamp-2">{item.name}</h3>
-                        </Link>
-                        
+                      </Link>
+                      
                         <p className="text-sm text-gray-500 mb-2 capitalize">{item.category}</p>
-                        
-                        <div className="flex items-center mb-3">
-                          <p className="font-bold text-gray-900">₹{item.price.toFixed(2)}</p>
-                          {discountPercentage > 0 && (
-                            <p className="ml-2 text-sm text-gray-500 line-through">₹{originalPrice.toFixed(2)}</p>
-                          )}
-                        </div>
+                      
+                      <div className="flex items-center mb-3">
+                        <p className="font-bold text-gray-900">₹{item.price.toFixed(2)}</p>
+                        {discountPercentage > 0 && (
+                          <p className="ml-2 text-sm text-gray-500 line-through">₹{originalPrice.toFixed(2)}</p>
+                        )}
+                      </div>
 
                         {/* Available Sizes */}
                         {availableSizes.length > 0 && (
@@ -284,20 +284,20 @@ const WishlistPage = () => {
                             )}
                           </div>
                         )}
-                        
-                        <div className="flex space-x-2">
-                          <button
+                      
+                      <div className="flex space-x-2">
+                        <button
                             onClick={() => handleMoveToCart(item)}
-                            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md flex items-center justify-center text-sm font-medium transition-colors"
-                          >
-                            <ShoppingBagIcon className="h-4 w-4 mr-1" />
-                            Add to Cart
-                          </button>
-                        </div>
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md flex items-center justify-center text-sm font-medium transition-colors"
+                        >
+                          <ShoppingBagIcon className="h-4 w-4 mr-1" />
+                          Add to Cart
+                        </button>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
               </div>
             </div>
           </div>

@@ -6,7 +6,7 @@ const OrderConfirmation = ({ order }) => {
   if (!order) return null;
   
   // Calculate estimated delivery date (5 days from order date)
-  const orderDate = new Date(order.date);
+  const orderDate = new Date(order.createdAt);
   const deliveryDate = new Date(orderDate);
   deliveryDate.setDate(deliveryDate.getDate() + 5);
   
@@ -35,7 +35,7 @@ const OrderConfirmation = ({ order }) => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Order Number</p>
-                <p className="font-bold text-gray-900">{order.id}</p>
+                <p className="font-bold text-gray-900">#{order._id.slice(-8).toUpperCase()}</p>
               </div>
             </div>
             
@@ -95,21 +95,27 @@ const OrderConfirmation = ({ order }) => {
             </div>
             
             <div className="relative flex items-start mb-6">
-              <div className="h-7 w-7 rounded-full bg-gray-300 flex items-center justify-center z-10">
+              <div className={`h-7 w-7 rounded-full ${order.status === 'Processing' ? 'bg-blue-500' : 'bg-gray-300'} flex items-center justify-center z-10`}>
                 <ClockIcon className="h-4 w-4 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className="text-base font-medium text-gray-500">Processing</h3>
-                <p className="text-sm text-gray-500">Your order is being processed</p>
+                <h3 className={`text-base font-medium ${order.status === 'Processing' ? 'text-gray-900' : 'text-gray-500'}`}>
+                  Processing
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {order.status === 'Processing' ? 'Your order is currently being processed' : 'Your order is being processed'}
+                </p>
               </div>
             </div>
             
             <div className="relative flex items-start">
-              <div className="h-7 w-7 rounded-full bg-gray-300 flex items-center justify-center z-10">
+              <div className={`h-7 w-7 rounded-full ${order.status === 'Shipped' || order.status === 'Delivered' ? 'bg-blue-500' : 'bg-gray-300'} flex items-center justify-center z-10`}>
                 <TruckIcon className="h-4 w-4 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className="text-base font-medium text-gray-500">Out for Delivery</h3>
+                <h3 className={`text-base font-medium ${order.status === 'Shipped' || order.status === 'Delivered' ? 'text-gray-900' : 'text-gray-500'}`}>
+                  Out for Delivery
+                </h3>
                 <p className="text-sm text-gray-500">Estimated delivery by {deliveryDate.toLocaleDateString()}</p>
               </div>
             </div>
@@ -125,22 +131,35 @@ const OrderConfirmation = ({ order }) => {
         <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
           <div className="divide-y divide-gray-200">
             {order.items.map((item) => (
-              <div key={item.id} className="flex items-center p-4 hover:bg-gray-50">
+              <div key={item._id} className="flex items-center p-4 hover:bg-gray-50">
                 <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                   <img
-                    src={item.image}
-                    alt={item.name}
+                    src={item.product.images && item.product.images.length > 0 
+                      ? item.product.images[0]
+                      : '/placeholder-image.jpg'
+                    }
+                    alt={item.product.name}
                     className="h-full w-full object-cover object-center"
+                    onError={(e) => {
+                      e.target.src = '/placeholder-image.jpg';
+                    }}
                   />
                 </div>
                 <div className="ml-4 flex-1">
-                  <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+                  <h3 className="text-sm font-medium text-gray-900">{item.product.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
-                  {item.size && <p className="text-xs text-gray-500">Size: {item.size}</p>}
-                  {item.color && <p className="text-xs text-gray-500">Color: {item.color}</p>}
+                  <p className="text-xs text-gray-500">Category: {item.product.category}</p>
+                  {item.product.description && (
+                    <p className="text-xs text-gray-400 mt-1 truncate max-w-xs">
+                      {item.product.description.length > 50 
+                        ? `${item.product.description.substring(0, 50)}...` 
+                        : item.product.description
+                      }
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                  <p className="text-sm font-medium text-gray-900">₹{(item.product.price * item.quantity).toLocaleString()}</p>
                   <p className="text-xs text-green-600 mt-1">Delivery by {deliveryDate.toLocaleDateString()}</p>
                 </div>
               </div>
@@ -153,12 +172,12 @@ const OrderConfirmation = ({ order }) => {
           <h3 className="text-base font-bold mb-3">PRICE DETAILS</h3>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Price ({order.items.length} items)</span>
-              <span>₹{(order.total * 1.05).toFixed(2)}</span>
+              <span className="text-gray-600">Price ({order.items.length} item{order.items.length > 1 ? 's' : ''})</span>
+              <span>₹{Math.round(order.totalAmount * 1.05).toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Discount</span>
-              <span className="text-green-600">- ₹{(order.total * 0.05).toFixed(2)}</span>
+              <span className="text-green-600">- ₹{Math.round(order.totalAmount * 0.05).toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Delivery Charges</span>
@@ -166,26 +185,45 @@ const OrderConfirmation = ({ order }) => {
             </div>
             <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-200 mt-2">
               <span>Total Amount</span>
-              <span>₹{order.total.toFixed(2)}</span>
+              <span>₹{order.totalAmount.toLocaleString()}</span>
             </div>
             <div className="pt-2 text-green-600 text-sm font-medium">
-              <p>You saved ₹{(order.total * 0.05).toFixed(2)} on this order</p>
+              <p>You saved ₹{Math.round(order.totalAmount * 0.05).toLocaleString()} on this order</p>
             </div>
           </div>
         </div>
         
+        {/* Payment Method */}
         <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-          <h3 className="text-base font-bold mb-3">DELIVERY ADDRESS</h3>
+          <h3 className="text-base font-bold mb-3">PAYMENT METHOD</h3>
           <div className="text-sm">
-            <p className="font-medium">{order.shippingAddress?.firstName} {order.shippingAddress?.lastName}</p>
-            <p className="text-gray-600 mt-1">{order.shippingAddress?.address}</p>
-            <p className="text-gray-600">{order.shippingAddress?.city}, {order.shippingAddress?.state} {order.shippingAddress?.zipCode}</p>
-            <p className="text-gray-600 mt-1">Phone: {order.shippingAddress?.phone}</p>
+            <p className="font-medium capitalize">
+              {order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : order.paymentMethod}
+            </p>
+            {order.paymentMethod === 'cod' && (
+              <p className="text-gray-600 mt-1">Pay when your order is delivered</p>
+            )}
+          </div>
+        </div>
+        
+        {/* Order Status */}
+        <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+          <h3 className="text-base font-bold mb-2">CURRENT STATUS</h3>
+          <div className="flex items-center">
+            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+              order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+              order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
+              order.status === 'Shipped' ? 'bg-indigo-100 text-indigo-800' :
+              order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {order.status}
+            </div>
           </div>
         </div>
         
         <p className="text-gray-500 text-sm mb-8">
-          You will receive a confirmation email with your order details shortly at <span className="font-medium">{order.shippingAddress?.email}</span>.
+          You will receive updates about your order status via email and SMS.
         </p>
         
         <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -193,7 +231,7 @@ const OrderConfirmation = ({ order }) => {
             Continue Shopping
             <ArrowRightIcon className="ml-2 h-5 w-5" />
           </Link>
-          <Link to="/account/orders" className="flex-1 flex justify-center items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300">
+          <Link to="/orders" className="flex-1 flex justify-center items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300">
             View All Orders
           </Link>
         </div>

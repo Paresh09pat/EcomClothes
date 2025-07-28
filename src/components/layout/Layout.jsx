@@ -16,8 +16,6 @@ const Layout = () => {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('_token_ecommerce')}`
       }
-      
-
     });
     setUser(res?.data?.user);
   }
