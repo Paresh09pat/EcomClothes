@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { baseUrl } from "../utils/constant";
 
 const ProductForm = () => {
     const navigate = useNavigate();
+    const { productId } = useParams();
+    const isEditMode = Boolean(productId);
     const { logoutAdmin, isAdminAuthenticated, adminToken } = useAuth();
 
     const [formData, setFormData] = useState({
@@ -22,6 +24,8 @@ const ProductForm = () => {
     const [imageUploadMethod, setImageUploadMethod] = useState("file"); // "file" or "url"
     const [imageFiles, setImageFiles] = useState([]); // Store actual file objects
     const [imagePreview, setImagePreview] = useState([]); // Store preview URLs
+    const [loading, setLoading] = useState(false);
+    const [loadingProduct, setLoadingProduct] = useState(isEditMode);
 
     // Handle admin logout
     const handleLogout = () => {
@@ -38,6 +42,70 @@ const ProductForm = () => {
         }
     }, [isAdminAuthenticated, adminToken, navigate]);
 
+    // Load existing product data when in edit mode
+    const loadProductData = async () => {
+        if (!isEditMode || !productId) return;
+        
+        try {
+            setLoadingProduct(true);
+            const response = await axios.get(`${baseUrl}/admin/get-all-products`, {
+                headers: {
+                    Authorization: `Bearer ${adminToken}`
+                }
+            });
+
+            if (response.data.success) {
+                // Find the specific product from the products array
+                const product = response.data.products.find(p => p._id === productId);
+                
+                if (!product) {
+                    toast.error("Product not found");
+                    navigate("/product-management");
+                    return;
+                }
+                
+                // Parse sizes if it's a JSON string
+                let parsedSizes = [];
+                try {
+                    parsedSizes = typeof product.size === 'string' ? JSON.parse(product.size) : product.size || [];
+                } catch {
+                    parsedSizes = [];
+                }
+
+                setFormData({
+                    name: product.name || "",
+                    description: product.description || "",
+                    price: product.price?.toString() || "",
+                    category: product.category || "",
+                    size: parsedSizes,
+                    images: product.imageUrls || [],
+                    is_featured: product.isFeatured || false,
+                });
+
+                // Set image previews but let user choose upload method
+                if (product.imageUrls && product.imageUrls.length > 0) {
+                    setImagePreview(product.imageUrls);
+                    // Don't automatically set to "url" - let user choose
+                }
+            } else {
+                toast.error("Failed to load product data");
+                navigate("/product-management");
+            }
+        } catch (error) {
+            console.error("Error loading product:", error);
+            toast.error("Failed to load product data");
+            navigate("/product-management");
+        } finally {
+            setLoadingProduct(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isEditMode) {
+            loadProductData();
+        }
+    }, [isEditMode, productId, adminToken]);
+
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         const newFiles = [...imageFiles, ...files];
@@ -47,9 +115,50 @@ const ProductForm = () => {
         setImagePreview([...imagePreview, ...previewUrls]);
     };
 
+    // Validate image URL
+    const isValidImageUrl = (url) => {
+        try {
+            new URL(url);
+            // Check if it's an image URL (basic check)
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+            const hasImageExtension = imageExtensions.some(ext => 
+                url.toLowerCase().includes(ext)
+            );
+            
+            // Allow Cloudinary URLs even without file extensions
+            const isCloudinary = url.includes('cloudinary.com') || url.includes('res.cloudinary.com');
+            
+            return hasImageExtension || isCloudinary || url.includes('unsplash.com') || url.includes('cdn.') || url.includes('images.');
+        } catch {
+            return false;
+        }
+    };
+
     const handleImageLinkAdd = (link) => {
-        if (link) {
-            setFormData({ ...formData, images: [...formData.images, link] });
+        if (link && link.trim()) {
+            const trimmedLink = link.trim();
+            
+            // Validate URL
+            if (!isValidImageUrl(trimmedLink)) {
+                toast.error('Please enter a valid image URL');
+                return;
+            }
+            
+            // Check if URL already exists
+            if (formData.images.includes(trimmedLink)) {
+                toast.warn('This image URL is already added');
+                return;
+            }
+            
+            const newImages = [...formData.images, trimmedLink];
+            setFormData({ ...formData, images: newImages });
+            
+            // Update preview for URL method
+            if (imageUploadMethod === "url") {
+                setImagePreview(newImages);
+            }
+            
+            console.log('Added image URL:', trimmedLink);
         }
     };
 
@@ -62,6 +171,11 @@ const ProductForm = () => {
         } else {
             const newImages = formData.images.filter((_, i) => i !== index);
             setFormData({ ...formData, images: newImages });
+            
+            // Update preview for URL method
+            if (imageUploadMethod === "url") {
+                setImagePreview(newImages);
+            }
         }
     };
 
@@ -79,61 +193,106 @@ const ProductForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
         try {
             let res;
+            let dataToSend;
+            let headers = {
+                Authorization: `Bearer ${adminToken}`,
+            };
 
-            // Always send as FormData to handle file uploads
-            const formDataToSend = new FormData();
-            formDataToSend.append('name', formData.name);
-            formDataToSend.append('description', formData.description);
-            formDataToSend.append('price', formData.price);
-            formDataToSend.append('category', formData.category);
-            formDataToSend.append('size', JSON.stringify(formData.size));
-            formDataToSend.append('isFeatured', formData.is_featured); // Send as boolean
+            // Determine what type of image data to send based on current method and available data
+            const hasNewFileUploads = imageUploadMethod === "file" && imageFiles.length > 0;
+            const hasImageUrls = imageUploadMethod === "url" && formData.images.length > 0;
 
-            // Handle main images
-            if (imageUploadMethod === "file" && imageFiles.length > 0) {
-                // Send file uploads
+            if (hasNewFileUploads) {
+                // User is uploading new files - use FormData
+                dataToSend = new FormData();
+                dataToSend.append('name', formData.name);
+                dataToSend.append('description', formData.description);
+                dataToSend.append('price', formData.price);
+                dataToSend.append('category', formData.category);
+                dataToSend.append('size', JSON.stringify(formData.size));
+                dataToSend.append('isFeatured', formData.is_featured);
+                
+                // In edit mode, explicitly indicate we're replacing images
+                if (isEditMode) {
+                    dataToSend.append('replaceImages', 'true');
+                }
+
+                // Add the new files
                 imageFiles.forEach((file) => {
-                    formDataToSend.append('images', file);
+                    dataToSend.append('images', file);
                 });
-            } else if (imageUploadMethod === "url" && formData.images.length > 0) {
-                // Send URL images as JSON
-                formDataToSend.append('imageUrls', JSON.stringify(formData.images));
-            }
 
+                headers['Content-Type'] = 'multipart/form-data';
+                console.log('Sending NEW FILE UPLOADS - Replace existing images');
+                
+            } else {
+                // Use JSON - either for URLs or no images
+                dataToSend = {
+                    name: formData.name,
+                    description: formData.description,
+                    price: parseFloat(formData.price),
+                    category: formData.category,
+                    size: formData.size,
+                    isFeatured: formData.is_featured
+                };
 
-            // Debug: Log what we're sending
-            for (let [key, value] of formDataToSend.entries()) {
-                if (value instanceof File) {
-                    // console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
+                // Handle image updates explicitly
+                if (hasImageUrls) {
+                    dataToSend.imageUrls = formData.images;
+                    if (isEditMode) {
+                        dataToSend.replaceImages = true;
+                    }
+                    console.log('Sending IMAGE URLS - Replace existing images:', formData.images);
+                } else if (isEditMode && imageUploadMethod === "file" && imageFiles.length === 0) {
+                    // User selected file method but didn't upload files - keep existing
+                    dataToSend.keepExistingImages = true;
+                    console.log('EDIT MODE: Keeping existing images (no changes)');
+                } else if (isEditMode) {
+                    // User wants to clear images
+                    dataToSend.clearImages = true;
+                    console.log('EDIT MODE: Clearing all images');
                 } else {
-                    // console.log(`${key}:`, value);
+                    console.log('CREATE MODE: No images provided');
                 }
+
+                headers['Content-Type'] = 'application/json';
             }
 
-            res = await axios.post(`${baseUrl}/admin/add-product`, formDataToSend, {
-                headers: {
-                    Authorization: `Bearer ${adminToken}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            console.log('Sending data:', dataToSend);
+            console.log('Headers:', headers);
 
-            toast.success("Product created successfully");
-            // Reset form
-            setFormData({
-                name: "",
-                description: "",
-                price: "",
-                category: "",
-                size: [], // Reset to empty array
-                images: [],
-                is_featured: false, // Reset to boolean false
-            });
-            setImageFiles([]);
-            setImagePreview([]);
-            setImageUploadMethod("file");
+            if (isEditMode) {
+                // Update existing product
+                res = await axios.put(`${baseUrl}/admin/update-product/${productId}`, dataToSend, {
+                    headers
+                });
+                toast.success("Product updated successfully");
+                navigate("/product-management");
+            } else {
+                // Create new product
+                res = await axios.post(`${baseUrl}/admin/add-product`, dataToSend, {
+                    headers
+                });
+                toast.success("Product created successfully");
+                
+                // Reset form for new product creation
+                setFormData({
+                    name: "",
+                    description: "",
+                    price: "",
+                    category: "",
+                    size: [],
+                    images: [],
+                    is_featured: false,
+                });
+                setImageFiles([]);
+                setImagePreview([]);
+                setImageUploadMethod("file");
+            }
         } catch (err) {
             console.error("Full error:", err);
             console.error("Error response:", err?.response?.data);
@@ -146,13 +305,29 @@ const ProductForm = () => {
                 return;
             }
 
-            toast.error(err?.response?.data?.message || "Error creating product");
+            toast.error(err?.response?.data?.message || `Error ${isEditMode ? 'updating' : 'creating'} product`);
+        } finally {
+            setLoading(false);
         }
     };
 
     // Don't render if not authenticated
     if (!isAdminAuthenticated) {
         return null;
+    }
+
+    // Show loading when loading product data in edit mode
+    if (loadingProduct) {
+        return (
+            <div className="min-h-screen bg-gray-50 py-8">
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Loading product data...</p>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -198,7 +373,9 @@ const ProductForm = () => {
                     onSubmit={handleSubmit}
                     className="bg-white rounded-xl shadow-md p-6 space-y-6"
                 >
-                    <h2 className="text-2xl font-bold mb-4 text-center">Create Product</h2>
+                    <h2 className="text-2xl font-bold mb-4 text-center">
+                        {isEditMode ? 'Edit Product' : 'Create Product'}
+                    </h2>
 
                     {/* Name */}
                     <div>
@@ -280,6 +457,16 @@ const ProductForm = () => {
                     {/* Images */}
                     <div>
                         <label className="block mb-1 font-medium">Main Images</label>
+                        
+                        {isEditMode && (
+                            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                <p className="text-sm text-blue-800">
+                                    <strong>Edit Mode:</strong> Choose how you want to handle images:
+                                    <br />• Select "Upload Files" to replace with new files
+                                    <br />• Select "Image URLs" to keep or update existing URLs
+                                </p>
+                            </div>
+                        )}
 
                         {/* Radio buttons for image upload method */}
                         <div className="flex gap-4 mb-3">
@@ -294,6 +481,10 @@ const ProductForm = () => {
                                         // Clear URL images when switching to file
                                         if (e.target.value === "file") {
                                             setFormData({ ...formData, images: [] });
+                                            // In edit mode, clear URL preview but keep file preview if any
+                                            if (isEditMode) {
+                                                setImagePreview(imageFiles.map(file => URL.createObjectURL(file)));
+                                            }
                                         }
                                     }}
                                 />
@@ -310,7 +501,12 @@ const ProductForm = () => {
                                         // Clear file images when switching to URL
                                         if (e.target.value === "url") {
                                             setImageFiles([]);
-                                            setImagePreview([]);
+                                            // In edit mode, restore URL preview from formData
+                                            if (isEditMode && formData.images.length > 0) {
+                                                setImagePreview(formData.images);
+                                            } else {
+                                                setImagePreview([]);
+                                            }
                                         }
                                     }}
                                 />
@@ -328,18 +524,35 @@ const ProductForm = () => {
                                 className="mb-2"
                             />
                         ) : (
-                            <input
-                                type="text"
-                                placeholder="Paste image URL and press Enter"
-                                className="w-full border p-2 rounded-md mb-2"
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        handleImageLinkAdd(e.target.value);
-                                        e.target.value = "";
-                                    }
-                                }}
-                            />
+                            <div className="space-y-2">
+                                <input
+                                    type="url"
+                                    placeholder="Paste image URL (Cloudinary, CDN, etc.) and press Enter"
+                                    className="w-full border p-2 rounded-md"
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            handleImageLinkAdd(e.target.value);
+                                            e.target.value = "";
+                                        }
+                                    }}
+                                />
+                                <p className="text-xs text-gray-500">
+                                    Supported: Cloudinary, image CDNs, direct image URLs (.jpg, .png, etc.)
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Image count display */}
+                        {(imagePreview.length > 0 || formData.images.length > 0) && (
+                            <div className="text-sm text-gray-600 mb-2">
+                                Images: {imageUploadMethod === "file" ? imagePreview.length : formData.images.length}
+                                {isEditMode && (
+                                    <span className="ml-2 text-blue-600">
+                                        (Will {imageUploadMethod === "file" && imageFiles.length > 0 ? "replace" : imageUploadMethod === "url" && formData.images.length > 0 ? "update" : "keep existing"})
+                                    </span>
+                                )}
+                            </div>
                         )}
 
                         {/* Display images */}
@@ -369,11 +582,26 @@ const ProductForm = () => {
                                         src={img}
                                         alt={`url-${i}`}
                                         className="w-20 h-20 object-cover rounded-md border"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                        onLoad={(e) => {
+                                            e.target.style.display = 'block';
+                                            e.target.nextSibling.style.display = 'none';
+                                        }}
                                     />
+                                    <div 
+                                        className="w-20 h-20 bg-gray-200 rounded-md border text-xs text-gray-500 text-center"
+                                        style={{ display: 'none', alignItems: 'center', justifyContent: 'center' }}
+                                    >
+                                        Image<br/>Load Error
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={() => removeImage(i, "url")}
                                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                        title="Remove image"
                                     >
                                         ×
                                     </button>
@@ -418,9 +646,13 @@ const ProductForm = () => {
                     <div className="text-center">
                         <button
                             type="submit"
-                            className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700"
+                            disabled={loading || loadingProduct}
+                            className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Submit Product
+                            {loading 
+                                ? (isEditMode ? 'Updating...' : 'Creating...') 
+                                : (isEditMode ? 'Update Product' : 'Submit Product')
+                            }
                         </button>
                     </div>
                 </form>

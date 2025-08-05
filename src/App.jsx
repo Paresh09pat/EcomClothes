@@ -61,6 +61,14 @@ function App() {
                     </AdminProtect>
                   }
                 />
+                <Route
+                  path="/edit-product/:productId"
+                  element={
+                    <AdminProtect>
+                      <ProductForm />
+                    </AdminProtect>
+                  }
+                />
                 <Route path="/admin-dashboard" element={<AdminProtect><AdminDashboard /></AdminProtect>} />
                 <Route path="/product-management" element={<AdminProtect><ProductManagement /></AdminProtect>} />
 

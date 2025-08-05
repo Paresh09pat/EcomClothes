@@ -22,6 +22,8 @@ const AdminDashboard = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [editingOrder, setEditingOrder] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [notification, setNotification] = useState({ show: false, message: '', type: '' });
     const ordersPerPage = 10;
 
     const { adminToken } = useAuth();
@@ -37,6 +39,26 @@ const AdminDashboard = () => {
             maximumFractionDigits: 2
         })}`;
     };
+
+    // Show notification function
+    const showNotification = (message, type = 'success') => {
+        setNotification({ show: true, message, type });
+        const timeoutId = setTimeout(() => {
+            setNotification({ show: false, message: '', type: '' });
+        }, 5000);
+        
+        // Store timeout ID for cleanup
+        window.notificationTimeout = timeoutId;
+    };
+
+    // Cleanup notification timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (window.notificationTimeout) {
+                clearTimeout(window.notificationTimeout);
+            }
+        };
+    }, []);
 
     // Filter orders based on search and status
     // useEffect(() => {
@@ -67,51 +89,115 @@ const AdminDashboard = () => {
     // const paginatedOrders = orders.slice(startIndex, startIndex + ordersPerPage);
 
     const getStatusColor = (status) => {
-        const lowerStatus = status.toLowerCase();
-        switch (lowerStatus) {
+        const normalizedStatus = status.toLowerCase().replace(/\s+/g, '_');
+        switch (normalizedStatus) {
             case 'pending': return 'bg-yellow-100 text-yellow-800';
-            case 'shipping': return 'bg-blue-100 text-blue-800';
+            case 'processing': return 'bg-blue-100 text-blue-800';
+            case 'shipped':
+            case 'shipping': return 'bg-indigo-100 text-indigo-800';
             case 'out_for_delivery': return 'bg-purple-100 text-purple-800';
             case 'delivered': return 'bg-green-100 text-green-800';
+            case 'cancelled': return 'bg-red-100 text-red-800';
             default: return 'bg-gray-100 text-gray-800';
         }
     };
 
     const getStatusIcon = (status) => {
-        const lowerStatus = status.toLowerCase();
-        switch (lowerStatus) {
+        const normalizedStatus = status.toLowerCase().replace(/\s+/g, '_');
+        switch (normalizedStatus) {
             case 'pending': return <Clock size={16} />;
+            case 'processing': return <Package size={16} />;
+            case 'shipped':
             case 'shipping': return <Package size={16} />;
             case 'out_for_delivery': return <Truck size={16} />;
             case 'delivered': return <CheckCircle size={16} />;
+            case 'cancelled': return <span className="w-4 h-4 text-center">×</span>;
             default: return <Clock size={16} />;
         }
     };
 
-    const updateOrderStatus = (orderId, newStatus) => {
-        const updatedOrders = allOrders.map(order =>
-            order._id === orderId ? { ...order, status: newStatus } : order
-        );
-        setAllOrders(updatedOrders);
-    };
 
-    const deleteOrder = (orderId) => {
-        if (window.confirm('Are you sure you want to delete this order?')) {
+
+    const deleteOrder = async (orderId) => {
+        if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+            try {
+                setLoading(true);
+                const response = await axios.delete(`${baseUrl}/admin/delete-order/${orderId}`, {
+                    headers: {
+                        Authorization: `Bearer ${adminToken}`
+                    }
+                });
+                
+                if (response.data.success) {
             const updatedOrders = allOrders.filter(order => order._id !== orderId);
             setAllOrders(updatedOrders);
+                    showNotification('Order deleted successfully!', 'success');
+                } else {
+                    showNotification(response.data.message || 'Failed to delete order', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                const errorMessage = error.response?.data?.message || 
+                                    error.response?.data?.error || 
+                                    error.message || 
+                                    'Failed to delete order. Please try again.';
+                showNotification(errorMessage, 'error');
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
-    const saveEditedOrder = (editedOrder) => {
-        const updatedOrders = allOrders.map(order =>
-            order._id === editedOrder._id ? { ...editedOrder } : order
-        );
-        setAllOrders(updatedOrders);
-        setEditingOrder(null);
+    const saveEditedOrder = async (editedOrder) => {
+        try {
+            setLoading(true);
+            
+            // Validate status is selected
+            if (!editedOrder?.status?.trim()) {
+                showNotification('Please select a status', 'error');
+                return;
+            }
+            
+            const response = await axios.put(`${baseUrl}/admin/update-order/${editedOrder._id}`, 
+                {
+                    status: editedOrder.status
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            
+                        if (response.data.success) {
+                const updatedOrders = allOrders.map(order =>
+                    order._id === editedOrder._id ? { ...order, status: editedOrder.status } : order
+                );
+                setAllOrders(updatedOrders);
+                setEditingOrder(null);
+                showNotification('Order status updated successfully!', 'success');
+            } else {
+                showNotification(response.data.message || 'Failed to update order', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating order:', error);
+            const errorMessage = error.response?.data?.message || 
+                                error.response?.data?.error || 
+                                error.message || 
+                                'Failed to update order. Please try again.';
+            showNotification(errorMessage, 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const getStatusCount = (status) => {
-        return allOrders.filter(order => order.status.toLowerCase() === status.toLowerCase()).length;
+        return allOrders.filter(order => {
+            const orderStatus = order.status.toLowerCase().replace(/\s+/g, '_');
+            const targetStatus = status.toLowerCase().replace(/\s+/g, '_');
+            return orderStatus === targetStatus;
+        }).length;
     };
 
     const debouncedSearch = useCallback(
@@ -159,6 +245,50 @@ const AdminDashboard = () => {
     console.log(orders);
     return (
         <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
+            {/* Notification Toast */}
+            {notification.show && (
+                <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl border-l-4 max-w-md transition-all duration-300 ${
+                    notification.type === 'success' 
+                        ? 'bg-white text-green-800 border-l-green-500 shadow-green-100' 
+                        : 'bg-white text-red-800 border-l-red-500 shadow-red-100'
+                }`}>
+                    <div className="flex items-start">
+                        <div className={`flex-shrink-0 ${
+                            notification.type === 'success' ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                            {notification.type === 'success' ? (
+                                <CheckCircle size={20} />
+                            ) : (
+                                <div className="w-5 h-5 rounded-full border-2 border-current flex items-center justify-center">
+                                    <span className="text-xs font-bold">!</span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="ml-3 flex-1">
+                            <p className="text-sm font-medium">{notification.message}</p>
+                        </div>
+                        <button 
+                            onClick={() => setNotification({ show: false, message: '', type: '' })}
+                            className="ml-4 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <span className="text-lg">×</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Loading Overlay */}
+            {loading && (
+                <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-40">
+                    <div className="bg-white p-6 rounded-lg shadow-lg">
+                        <div className="flex items-center gap-3">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            <span>Processing...</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8 flex justify-between items-center">
@@ -167,10 +297,11 @@ const AdminDashboard = () => {
                         <p className="text-gray-600">Manage and track all your e-commerce orders</p>
                     </div>
                     <Link to="/product-form" className='bg-blue-500 text-white px-4 py-2 rounded-md'>Add Product</Link>
+                    <Link to="/product-management" className='bg-blue-500 text-white px-4 py-2 rounded-md'>Product Management</Link>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -187,7 +318,7 @@ const AdminDashboard = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-600">Pending</p>
-                                <p className="text-2xl font-bold text-yellow-600">{getStatusCount('pending')}</p>
+                                <p className="text-2xl font-bold text-yellow-600">{getStatusCount('Pending')}</p>
                             </div>
                             <div className="p-3 bg-yellow-100 rounded-full">
                                 <Clock className="h-6 w-6 text-yellow-600" />
@@ -198,8 +329,8 @@ const AdminDashboard = () => {
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Shipping</p>
-                                <p className="text-2xl font-bold text-blue-600">{getStatusCount('shipping')}</p>
+                                <p className="text-sm font-medium text-gray-600">Processing</p>
+                                <p className="text-2xl font-bold text-blue-600">{getStatusCount('Processing')}</p>
                             </div>
                             <div className="p-3 bg-blue-100 rounded-full">
                                 <Package className="h-6 w-6 text-blue-600" />
@@ -210,8 +341,20 @@ const AdminDashboard = () => {
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center justify-between">
                             <div>
+                                <p className="text-sm font-medium text-gray-600">Shipped</p>
+                                <p className="text-2xl font-bold text-indigo-600">{getStatusCount('Shipped')}</p>
+                            </div>
+                            <div className="p-3 bg-indigo-100 rounded-full">
+                                <Truck className="h-6 w-6 text-indigo-600" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
                                 <p className="text-sm font-medium text-gray-600">Delivered</p>
-                                <p className="text-2xl font-bold text-green-600">{getStatusCount('delivered')}</p>
+                                <p className="text-2xl font-bold text-green-600">{getStatusCount('Delivered')}</p>
                             </div>
                             <div className="p-3 bg-green-100 rounded-full">
                                 <CheckCircle className="h-6 w-6 text-green-600" />
@@ -243,10 +386,12 @@ const AdminDashboard = () => {
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
                                 <option value="all">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="shipping">Shipping</option>
-                                <option value="out_for_delivery">Out for Delivery</option>
-                                <option value="delivered">Delivered</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Out for Delivery">Out for Delivery</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
                             </select>
                         </div>
                     </div>
@@ -306,21 +451,24 @@ const AdminDashboard = () => {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => setSelectedOrder(order)}
-                                                    className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                                                    disabled={loading}
+                                                    className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-900'}`}
                                                     title="View Details"
                                                 >
                                                     <Eye size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => setEditingOrder(order)}
-                                                    className="text-green-600 hover:text-green-900 p-1 rounded"
+                                                    disabled={loading}
+                                                    className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-green-600 hover:text-green-900'}`}
                                                     title="Edit Order"
                                                 >
                                                     <Edit size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => deleteOrder(order._id)}
-                                                    className="text-red-600 hover:text-red-900 p-1 rounded"
+                                                    disabled={loading}
+                                                    className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
                                                     title="Delete Order"
                                                 >
                                                     <Trash2 size={16} />
@@ -461,26 +609,6 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-2">Update Status</h3>
-                                    <div className="flex gap-2 flex-wrap">
-                                        {['Pending', 'Shipping', 'Out for Delivery', 'Delivered'].map((status) => (
-                                            <button
-                                                key={status}
-                                                onClick={() => {
-                                                    updateOrderStatus(selectedOrder._id, status);
-                                                    setSelectedOrder({ ...selectedOrder, status });
-                                                }}
-                                                className={`px-3 py-1 rounded text-sm font-medium ${selectedOrder.status === status
-                                                    ? 'bg-blue-100 text-blue-800 border-2 border-blue-300'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    }`}
-                                            >
-                                                {status}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -493,7 +621,10 @@ const AdminDashboard = () => {
                     <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold text-gray-900">Edit Order</h2>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900">Edit Order Status</h2>
+                                    <p className="text-sm text-gray-600 mt-1">Note: Only order status can be updated. Customer details are read-only.</p>
+                                </div>
                                 <button
                                     onClick={() => setEditingOrder(null)}
                                     className="text-gray-400 hover:text-gray-600"
@@ -503,72 +634,74 @@ const AdminDashboard = () => {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
-                                        <input
-                                            type="text"
-                                            value={editingOrder.user.name}
-                                            onChange={(e) => setEditingOrder({
-                                                ...editingOrder,
-                                                user: { ...editingOrder.user, name: e.target.value }
-                                            })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
+                                <div className="bg-gray-50 p-4 rounded-md mb-4">
+                                    <h3 className="text-sm font-medium text-gray-700 mb-3">Customer Information (Read-only)</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 mb-1">Customer Name</label>
+                                            <input
+                                                type="text"
+                                                value={editingOrder.user.name}
+                                                disabled
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                                            <input
+                                                type="email"
+                                                value={editingOrder.user.email}
+                                                disabled
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                                            />
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-600 mb-1">Phone</label>
                                         <input
-                                            type="email"
-                                            value={editingOrder.user.email}
-                                            onChange={(e) => setEditingOrder({
-                                                ...editingOrder,
-                                                user: { ...editingOrder.user, email: e.target.value }
-                                            })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            type="tel"
+                                            value={editingOrder.user.phone}
+                                            disabled
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                    <input
-                                        type="tel"
-                                        value={editingOrder.user.phone}
-                                        onChange={(e) => setEditingOrder({
-                                            ...editingOrder,
-                                            user: { ...editingOrder.user, phone: e.target.value }
-                                        })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
+                                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                                        Update Order Status <span className="text-red-500">*</span>
+                                    </label>
                                     <select
                                         value={editingOrder.status}
                                         onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={loading}
+                                        className={`w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        required
                                     >
                                         <option value="Pending">Pending</option>
-                                        <option value="Shipping">Shipping</option>
+                                        <option value="Processing">Processing</option>
+                                        <option value="Shipped">Shipped</option>
                                         <option value="Out for Delivery">Out for Delivery</option>
                                         <option value="Delivered">Delivered</option>
+                                        <option value="Cancelled">Cancelled</option>
                                     </select>
+                                    <p className="text-sm text-blue-700 mt-1">Current status: <span className="font-medium">{editingOrder.status}</span></p>
                                 </div>
 
                                 <div className="flex justify-end gap-3 pt-4">
                                     <button
                                         onClick={() => setEditingOrder(null)}
-                                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                                        disabled={loading}
+                                        className={`px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={() => saveEditedOrder(editingOrder)}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                        disabled={loading}
+                                        className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        Save Changes
+                                        {loading ? 'Updating...' : 'Update Status'}
                                     </button>
                                 </div>
                             </div>
