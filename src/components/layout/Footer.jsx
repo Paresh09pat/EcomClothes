@@ -100,8 +100,8 @@ const Footer = () => {
                 { name: 'FAQ', path: '#' },
                 { name: 'Shipping & Returns', path: '#' },
                 { name: 'Size Guide', path: '#' },
-                { name: 'Track Order', path: '#' },
-                { name: 'Privacy Policy', path: '#' },
+                { name: 'Privacy Policy', path: '/privacy-policy' },
+                { name: 'Terms & Conditions', path: '/terms-and-conditions' },
               ].map((item) => (
                 <li key={item.name}>
                   <Link 
