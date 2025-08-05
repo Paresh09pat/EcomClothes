@@ -38,7 +38,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-      <ScrollToTop />
+        <ScrollToTop />
         <ToastContainer />
         <AuthProvider>
           <CartProvider>
@@ -49,8 +49,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/admin-login" element={<AdminLogin />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/product-management" element={<ProductManagement />} />
+
 
 
                 {/* Admin Protected Route */}
@@ -62,8 +61,10 @@ function App() {
                     </AdminProtect>
                   }
                 />
+                <Route path="/admin-dashboard" element={<AdminProtect><AdminDashboard /></AdminProtect>} />
+                <Route path="/product-management" element={<AdminProtect><ProductManagement /></AdminProtect>} />
 
-                
+
                 <Route element={<Layout />}>
                   <Route index element={<HomePage />} />
                   <Route path="products/:productId" element={<ProductDetailPage />} />

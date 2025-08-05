@@ -1,5 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, Edit, Trash2, Eye, Package, Truck, CheckCircle, Clock, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { baseUrl } from '../utils/constant';
+import { useAuth } from '../contexts/AuthContext';
+import { debounce } from 'lodash';
 
 const AdminDashboard = () => {
     // Currency configuration - fixed to Indian Rupee only
@@ -9,85 +14,17 @@ const AdminDashboard = () => {
         name: 'Indian Rupee'
     };
 
-    // Sample order data - in real app, this would come from API
-    const [allOrders, setAllOrders] = useState([
-        {
-            id: 'ORD001',
-            customer: 'John Doe',
-            email: 'john@example.com',
-            phone: '+1234567890',
-            items: [
-                { name: 'Wireless Headphones', quantity: 1, price: 8299.99 },
-                { name: 'Phone Case', quantity: 2, price: 1659.99 }
-            ],
-            total: 11619.97,
-            status: 'pending',
-            date: '2024-01-15',
-            address: '123 Main St, New York, NY 10001'
-        },
-        {
-            id: 'ORD002',
-            customer: 'Jane Smith',
-            email: 'jane@example.com',
-            phone: '+1234567891',
-            items: [
-                { name: 'Laptop Stand', quantity: 1, price: 6639.99 }
-            ],
-            total: 6639.99,
-            status: 'shipping',
-            date: '2024-01-14',
-            address: '456 Oak Ave, Los Angeles, CA 90210'
-        },
-        {
-            id: 'ORD003',
-            customer: 'Mike Johnson',
-            email: 'mike@example.com',
-            phone: '+1234567892',
-            items: [
-                { name: 'Smart Watch', quantity: 1, price: 24899.99 },
-                { name: 'Watch Band', quantity: 1, price: 2489.99 }
-            ],
-            total: 27389.98,
-            status: 'delivered',
-            date: '2024-01-13',
-            address: '789 Pine St, Chicago, IL 60601'
-        },
-        {
-            id: 'ORD004',
-            customer: 'Sarah Wilson',
-            email: 'sarah@example.com',
-            phone: '+1234567893',
-            items: [
-                { name: 'Bluetooth Speaker', quantity: 1, price: 12449.99 }
-            ],
-            total: 12449.99,
-            status: 'out_for_delivery',
-            date: '2024-01-12',
-            address: '321 Elm St, Houston, TX 77001'
-        },
-        // Add more sample orders to test pagination
-        ...Array.from({ length: 20 }, (_, i) => ({
-            id: `ORD${String(i + 5).padStart(3, '0')}`,
-            customer: `Customer ${i + 5}`,
-            email: `customer${i + 5}@example.com`,
-            phone: `+123456789${i + 5}`,
-            items: [
-                { name: `Product ${i + 5}`, quantity: 1, price: Math.floor(Math.random() * 15000) + 2000 }
-            ],
-            total: Math.floor(Math.random() * 15000) + 2000,
-            status: ['pending', 'shipping', 'out_for_delivery', 'delivered'][Math.floor(Math.random() * 4)],
-            date: `2024-01-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
-            address: `${Math.floor(Math.random() * 999) + 100} Random St, City, State ${Math.floor(Math.random() * 90000) + 10000}`
-        }))
-    ]);
-
-    const [orders, setOrders] = useState(allOrders);
+    const [allOrders, setAllOrders] = useState([]);
+    const [orders, setOrders] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [inputValue, setInputValue] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [editingOrder, setEditingOrder] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const ordersPerPage = 10;
+
+    const { adminToken } = useAuth();
 
     // Format currency function
     const formatCurrency = (amount) => {
@@ -101,32 +38,37 @@ const AdminDashboard = () => {
         })}`;
     };
 
-    useEffect(() => {
-        let filtered = allOrders;
+    // Filter orders based on search and status
+    // useEffect(() => {
+    //     let filtered = allOrders;
 
-        if (searchTerm) {
-            filtered = filtered.filter(order =>
-                order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.email.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
+    //     if (searchTerm) {
+    //         filtered = filtered.filter(order =>
+    //             order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //             order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //             order.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //             order.items.some(item =>
+    //                 item.product.name.toLowerCase().includes(searchTerm.toLowerCase())
+    //             )
+    //         );
+    //     }
 
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(order => order.status === statusFilter);
-        }
+    //     if (statusFilter !== 'all') {
+    //         filtered = filtered.filter(order => order.status.toLowerCase() === statusFilter.toLowerCase());
+    //     }
 
-        setOrders(filtered);
-        setCurrentPage(1);
-    }, [searchTerm, statusFilter, allOrders]);
+    //     setOrders(filtered);
+    //     setCurrentPage(1);
+    // }, [searchTerm, statusFilter, allOrders]);
 
     // Pagination
-    const totalPages = Math.ceil(orders.length / ordersPerPage);
-    const startIndex = (currentPage - 1) * ordersPerPage;
-    const paginatedOrders = orders.slice(startIndex, startIndex + ordersPerPage);
+    // const totalPages = Math.ceil(orders.length / ordersPerPage);
+    // const startIndex = (currentPage - 1) * ordersPerPage;
+    // const paginatedOrders = orders.slice(startIndex, startIndex + ordersPerPage);
 
     const getStatusColor = (status) => {
-        switch (status) {
+        const lowerStatus = status.toLowerCase();
+        switch (lowerStatus) {
             case 'pending': return 'bg-yellow-100 text-yellow-800';
             case 'shipping': return 'bg-blue-100 text-blue-800';
             case 'out_for_delivery': return 'bg-purple-100 text-purple-800';
@@ -136,7 +78,8 @@ const AdminDashboard = () => {
     };
 
     const getStatusIcon = (status) => {
-        switch (status) {
+        const lowerStatus = status.toLowerCase();
+        switch (lowerStatus) {
             case 'pending': return <Clock size={16} />;
             case 'shipping': return <Package size={16} />;
             case 'out_for_delivery': return <Truck size={16} />;
@@ -147,39 +90,83 @@ const AdminDashboard = () => {
 
     const updateOrderStatus = (orderId, newStatus) => {
         const updatedOrders = allOrders.map(order =>
-            order.id === orderId ? { ...order, status: newStatus } : order
+            order._id === orderId ? { ...order, status: newStatus } : order
         );
         setAllOrders(updatedOrders);
     };
 
     const deleteOrder = (orderId) => {
         if (window.confirm('Are you sure you want to delete this order?')) {
-            const updatedOrders = allOrders.filter(order => order.id !== orderId);
+            const updatedOrders = allOrders.filter(order => order._id !== orderId);
             setAllOrders(updatedOrders);
         }
     };
 
     const saveEditedOrder = (editedOrder) => {
         const updatedOrders = allOrders.map(order =>
-            order.id === editedOrder.id ? { ...editedOrder } : order
+            order._id === editedOrder._id ? { ...editedOrder } : order
         );
         setAllOrders(updatedOrders);
         setEditingOrder(null);
     };
 
     const getStatusCount = (status) => {
-        return allOrders.filter(order => order.status === status).length;
+        return allOrders.filter(order => order.status.toLowerCase() === status.toLowerCase()).length;
     };
 
+    const debouncedSearch = useCallback(
+        debounce((value) => {
+            setSearchTerm(value);
+        }, 500),
+        []
+    );
+
+    const handleInputChange = (e) => {
+        const value = e.target.value;
+        setInputValue(value);         // update the UI immediately
+        debouncedSearch(value);       // update searchTerm after 500ms
+    };
+
+    const getAllOrders = async () => {
+        try {
+            const response = await axios.get(`${baseUrl}/admin/get-all-orders`, {
+                params: {
+                    searchTerm,
+                    filter: statusFilter
+                },
+                headers: {
+                    Authorization: `Bearer ${adminToken}`
+                }
+            });
+            console.log(response.data);
+            setAllOrders(response.data.orders);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    useEffect(() => {
+        getAllOrders();
+    }, [searchTerm, statusFilter]);
+    // Helper function to get order items summary
+    const getOrderItemsSummary = (items) => {
+        if (items.length === 1) {
+            return items[0].product.name;
+        }
+        return `${items[0].product.name} +${items.length - 1} more`;
+    };
+
+    console.log(orders);
     return (
         <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Management Dashboard</h1>
-                        <p className="text-gray-600">Manage and track all your e-commerce orders </p>
+                        <p className="text-gray-600">Manage and track all your e-commerce orders</p>
                     </div>
+                    <Link to="/product-form" className='bg-blue-500 text-white px-4 py-2 rounded-md'>Add Product</Link>
                 </div>
 
                 {/* Stats Cards */}
@@ -241,10 +228,10 @@ const AdminDashboard = () => {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                 <input
                                     type="text"
-                                    placeholder="Search by Order ID, Customer Name, or Email..."
+                                    placeholder="Search by Order ID, Customer Name, Email, or Product..."
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    value={inputValue}
+                                    onChange={handleInputChange}
                                 />
                             </div>
                         </div>
@@ -271,35 +258,49 @@ const AdminDashboard = () => {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {paginatedOrders.map((order) => (
-                                    <tr key={order.id} className="hover:bg-gray-50">
+                                {allOrders.map((order) => (
+                                    <tr key={order._id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{order.id}</div>
+                                            <div className="text-sm font-medium text-gray-900">#{order._id.slice(-8)}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{order.customer}</div>
-                                            <div className="text-sm text-gray-500">{order.email}</div>
+                                            <div>
+                                                <div className="text-sm font-medium text-gray-900">{order.user.name}</div>
+                                                <div className="text-sm text-gray-500">{order.user.email}</div>
+                                                <div className="text-sm text-gray-500">{order.user.phone}</div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm text-gray-900">
+                                                {getOrderItemsSummary(order.items)}
+                                            </div>
+                                            <div className="text-sm text-gray-500">{order.items.length} item(s)</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{formatCurrency(order.total)}</div>
+                                            <div className="text-sm font-medium text-gray-900">{formatCurrency(order.totalAmount)}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                                                 {getStatusIcon(order.status)}
-                                                {order.status.replace('_', ' ')}
+                                                {order.status}
                                             </span>
                                         </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900 capitalize">{order.paymentMethod}</div>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {order.date}
+                                            {new Date(order.createdAt).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div className="flex items-center gap-2">
@@ -318,7 +319,7 @@ const AdminDashboard = () => {
                                                     <Edit size={16} />
                                                 </button>
                                                 <button
-                                                    onClick={() => deleteOrder(order.id)}
+                                                    onClick={() => deleteOrder(order._id)}
                                                     className="text-red-600 hover:text-red-900 p-1 rounded"
                                                     title="Delete Order"
                                                 >
@@ -333,65 +334,65 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                            <div className="flex-1 flex justify-between sm:hidden">
-                                <button
-                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                    disabled={currentPage === 1}
-                                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                                >
-                                    Previous
-                                </button>
-                                <button
-                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                                >
-                                    Next
-                                </button>
+                    {/* {totalPages > 1 && ( */}
+                    <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                        <div className="flex-1 flex justify-between sm:hidden">
+                            <button
+                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                // g352disabled={currentPage === 1}
+                                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(Math.min(1, currentPage + 1))}
+                                // disabled={currentPage === totalPages}
+                                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                Next
+                            </button>
+                        </div>
+                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm text-gray-700">
+                                    Showing <span className="font-medium">{1}</span> to{' '}
+                                    <span className="font-medium">{Math.min(1 + 1, allOrders.length)}</span> of{' '}
+                                    <span className="font-medium">{allOrders.length}</span> results
+                                </p>
                             </div>
-                            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-700">
-                                        Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                                        <span className="font-medium">{Math.min(startIndex + ordersPerPage, orders.length)}</span> of{' '}
-                                        <span className="font-medium">{orders.length}</span> results
-                                    </p>
-                                </div>
-                                <div>
-                                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            <div>
+                                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                    <button
+                                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                        // disabled={currentPage === 1}
+                                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        <ChevronLeft className="h-5 w-5" />
+                                    </button>
+                                    {Array.from({ length: 1 }, (_, i) => i + 1).map((page) => (
                                         <button
-                                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                            disabled={currentPage === 1}
-                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                            key={page}
+                                            onClick={() => setCurrentPage(page)}
+                                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === page
+                                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                }`}
                                         >
-                                            <ChevronLeft className="h-5 w-5" />
+                                            {page}
                                         </button>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <button
-                                                key={page}
-                                                onClick={() => setCurrentPage(page)}
-                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === page
-                                                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                    }`}
-                                            >
-                                                {page}
-                                            </button>
-                                        ))}
-                                        <button
-                                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                                            disabled={currentPage === totalPages}
-                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                        >
-                                            <ChevronRight className="h-5 w-5" />
-                                        </button>
-                                    </nav>
-                                </div>
+                                    ))}
+                                    <button
+                                        onClick={() => setCurrentPage(Math.min(1, currentPage + 1))}
+                                        // disabled={currentPage === totalPages}
+                                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        <ChevronRight className="h-5 w-5" />
+                                    </button>
+                                </nav>
                             </div>
                         </div>
-                    )}
+                    </div>
+                    {/* )} */}
                 </div>
             </div>
 
@@ -414,26 +415,22 @@ const AdminDashboard = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <h3 className="font-semibold text-gray-900 mb-2">Order Information</h3>
-                                        <p><strong>Order ID:</strong> {selectedOrder.id}</p>
-                                        <p><strong>Date:</strong> {selectedOrder.date}</p>
+                                        <p><strong>Order ID:</strong> #{selectedOrder._id.slice(-8)}</p>
+                                        <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
                                         <p><strong>Status:</strong>
                                             <span className={`ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
                                                 {getStatusIcon(selectedOrder.status)}
-                                                {selectedOrder.status.replace('_', ' ')}
+                                                {selectedOrder.status}
                                             </span>
                                         </p>
+                                        <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod.toUpperCase()}</p>
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-gray-900 mb-2">Customer Information</h3>
-                                        <p><strong>Name:</strong> {selectedOrder.customer}</p>
-                                        <p><strong>Email:</strong> {selectedOrder.email}</p>
-                                        <p><strong>Phone:</strong> {selectedOrder.phone}</p>
+                                        <p><strong>Name:</strong> {selectedOrder.user.name}</p>
+                                        <p><strong>Email:</strong> {selectedOrder.user.email}</p>
+                                        <p><strong>Phone:</strong> {selectedOrder.user.phone}</p>
                                     </div>
-                                </div>
-
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-2">Shipping Address</h3>
-                                    <p>{selectedOrder.address}</p>
                                 </div>
 
                                 <div>
@@ -441,17 +438,25 @@ const AdminDashboard = () => {
                                     <div className="space-y-2">
                                         {selectedOrder.items.map((item, index) => (
                                             <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded">
-                                                <div>
-                                                    <p className="font-medium">{item.name}</p>
-                                                    <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={item.product.imageUrls[0]}
+                                                        alt={item.product.name}
+                                                        className="w-12 h-12 object-cover rounded"
+                                                    />
+                                                    <div>
+                                                        <p className="font-medium">{item.product.name}</p>
+                                                        <p className="text-sm text-gray-600">Category: {item.product.category}</p>
+                                                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                                    </div>
                                                 </div>
-                                                <p className="font-medium">{formatCurrency(item.price)}</p>
+                                                <p className="font-medium">{formatCurrency(item.product.price)}</p>
                                             </div>
                                         ))}
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-gray-200">
                                         <div className="flex justify-between items-center">
-                                            <p className="text-lg font-bold">Total: {formatCurrency(selectedOrder.total)}</p>
+                                            <p className="text-lg font-bold">Total: {formatCurrency(selectedOrder.totalAmount)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -459,19 +464,19 @@ const AdminDashboard = () => {
                                 <div>
                                     <h3 className="font-semibold text-gray-900 mb-2">Update Status</h3>
                                     <div className="flex gap-2 flex-wrap">
-                                        {['pending', 'shipping', 'out_for_delivery', 'delivered'].map((status) => (
+                                        {['Pending', 'Shipping', 'Out for Delivery', 'Delivered'].map((status) => (
                                             <button
                                                 key={status}
                                                 onClick={() => {
-                                                    updateOrderStatus(selectedOrder.id, status);
+                                                    updateOrderStatus(selectedOrder._id, status);
                                                     setSelectedOrder({ ...selectedOrder, status });
                                                 }}
                                                 className={`px-3 py-1 rounded text-sm font-medium ${selectedOrder.status === status
-                                                        ? 'bg-blue-100 text-blue-800 border-2 border-blue-300'
-                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                    ? 'bg-blue-100 text-blue-800 border-2 border-blue-300'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                     }`}
                                             >
-                                                {status.replace('_', ' ')}
+                                                {status}
                                             </button>
                                         ))}
                                     </div>
@@ -503,8 +508,11 @@ const AdminDashboard = () => {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
                                         <input
                                             type="text"
-                                            value={editingOrder.customer}
-                                            onChange={(e) => setEditingOrder({ ...editingOrder, customer: e.target.value })}
+                                            value={editingOrder.user.name}
+                                            onChange={(e) => setEditingOrder({
+                                                ...editingOrder,
+                                                user: { ...editingOrder.user, name: e.target.value }
+                                            })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         />
                                     </div>
@@ -512,8 +520,11 @@ const AdminDashboard = () => {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                         <input
                                             type="email"
-                                            value={editingOrder.email}
-                                            onChange={(e) => setEditingOrder({ ...editingOrder, email: e.target.value })}
+                                            value={editingOrder.user.email}
+                                            onChange={(e) => setEditingOrder({
+                                                ...editingOrder,
+                                                user: { ...editingOrder.user, email: e.target.value }
+                                            })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         />
                                     </div>
@@ -523,18 +534,11 @@ const AdminDashboard = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                                     <input
                                         type="tel"
-                                        value={editingOrder.phone}
-                                        onChange={(e) => setEditingOrder({ ...editingOrder, phone: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
-                                    <textarea
-                                        value={editingOrder.address}
-                                        onChange={(e) => setEditingOrder({ ...editingOrder, address: e.target.value })}
-                                        rows={3}
+                                        value={editingOrder.user.phone}
+                                        onChange={(e) => setEditingOrder({
+                                            ...editingOrder,
+                                            user: { ...editingOrder.user, phone: e.target.value }
+                                        })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                 </div>
@@ -546,10 +550,10 @@ const AdminDashboard = () => {
                                         onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
-                                        <option value="pending">Pending</option>
-                                        <option value="shipping">Shipping</option>
-                                        <option value="out_for_delivery">Out for Delivery</option>
-                                        <option value="delivered">Delivered</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Shipping">Shipping</option>
+                                        <option value="Out for Delivery">Out for Delivery</option>
+                                        <option value="Delivered">Delivered</option>
                                     </select>
                                 </div>
 

@@ -5,7 +5,7 @@ import { ArrowRightIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 const Hero = () => {
   // Array of background images for rotation with fixed height parameter
   const backgroundImages = [
-    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&h=800&q=80",
+    "/cloth1.png",
     "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&h=800&q=80",
     "https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&h=800&q=80",
     "https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&h=800&q=80",
