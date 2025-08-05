@@ -27,6 +27,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import ScrollToTop from './components/common/ScrollToTop';
 import AdminDashboard from './Admin/AdminDashboard';
 import ProductManagement from './Admin/ProductManagement';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-screen">
@@ -92,6 +94,8 @@ function App() {
                   <Route path="order-confirmation" element={<OrderConfirmationPage />} />
                   <Route path="orders" element={<OrderHistoryPage />} />
                   <Route path="wishlist" element={<WishlistPage />} />
+                  <Route path="privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="terms-and-conditions" element={<TermsAndConditions />} />
                 </Route>
 
               </Routes>
