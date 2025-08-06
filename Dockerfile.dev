@@ -1,0 +1,23 @@
+# Development Dockerfile for hot reloading
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache libc6-compat
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose Vite dev server port
+EXPOSE 5173
+
+# Start development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"] 
