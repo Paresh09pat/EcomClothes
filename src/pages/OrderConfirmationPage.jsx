@@ -18,35 +18,35 @@ const OrderConfirmationPage = () => {
       const response = await axios.get(`${baseUrl}/v1/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json' // Changed from multipart/form-data to application/json
+          'Content-Type': 'application/json'
         }
       });
       
-      
-      // Get the most recent order (first in the array since they seem to be sorted by creation date desc)
       if (response.data.orders && response.data.orders.length > 0) {
         const latestOrder = response.data.orders[0];
         setOrder(latestOrder);
       } else {
         setError('No orders found');
-        // Redirect to home if no orders found
         setTimeout(() => navigate('/'), 2000);
       }
     } catch (err) {
-        
+      console.error('Error fetching orders:', err);
       setError('Failed to load order details');
-      // Redirect to home on error
       setTimeout(() => navigate('/'), 2000);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleOrderUpdate = (updatedOrder) => {
+    setOrder(updatedOrder);
+    getOrders();
+  };
+
   useEffect(() => {
     if (token) {
       getOrders();
     } else {
-      // Redirect to login if no token
       navigate('/login');
     }
   }, [token, navigate]);
@@ -85,7 +85,7 @@ const OrderConfirmationPage = () => {
   return (
     <div className="container py-12">
       <div className="max-w-3xl mx-auto">
-        <OrderConfirmation order={order} />
+        <OrderConfirmation order={order} onOrderUpdate={handleOrderUpdate} getOrders={getOrders} />
       </div>
     </div>
   );

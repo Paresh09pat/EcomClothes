@@ -22,6 +22,8 @@ const AdminDashboard = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [editingOrder, setEditingOrder] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalOrders, setTotalOrders] = useState(0);
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
     const ordersPerPage = 10;
@@ -60,33 +62,21 @@ const AdminDashboard = () => {
         };
     }, []);
 
-    // Filter orders based on search and status
-    // useEffect(() => {
-    //     let filtered = allOrders;
+    // Pagination logic
+    const getPaginatedOrders = () => {
+        const startIndex = (currentPage - 1) * ordersPerPage;
+        return allOrders.slice(startIndex, startIndex + ordersPerPage);
+    };
 
-    //     if (searchTerm) {
-    //         filtered = filtered.filter(order =>
-    //             order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //             order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //             order.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //             order.items.some(item =>
-    //                 item.product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    //             )
-    //         );
-    //     }
-
-    //     if (statusFilter !== 'all') {
-    //         filtered = filtered.filter(order => order.status.toLowerCase() === statusFilter.toLowerCase());
-    //     }
-
-    //     setOrders(filtered);
-    //     setCurrentPage(1);
-    // }, [searchTerm, statusFilter, allOrders]);
-
-    // Pagination
-    // const totalPages = Math.ceil(orders.length / ordersPerPage);
-    // const startIndex = (currentPage - 1) * ordersPerPage;
-    // const paginatedOrders = orders.slice(startIndex, startIndex + ordersPerPage);
+    // Update pagination info when orders change
+    useEffect(() => {
+        setTotalOrders(allOrders.length);
+        setTotalPages(Math.ceil(allOrders.length / ordersPerPage));
+        // Reset to page 1 if current page is beyond available pages
+        if (currentPage > Math.ceil(allOrders.length / ordersPerPage) && allOrders.length > 0) {
+            setCurrentPage(1);
+        }
+    }, [allOrders.length, currentPage]);
 
     const getStatusColor = (status) => {
         const normalizedStatus = status.toLowerCase().replace(/\s+/g, '_');
@@ -225,6 +215,7 @@ const AdminDashboard = () => {
                 }
             });
             setAllOrders(response.data.orders);
+            setCurrentPage(1); // Reset to first page when fetching new data
         } catch (error) {
         }
     };
@@ -395,7 +386,7 @@ const AdminDashboard = () => {
                                 <option value="Shipped">Shipped</option>
                                 <option value="Out for Delivery">Out for Delivery</option>
                                 <option value="Delivered">Delivered</option>
-                                <option value="Cancelled">Cancelled</option>
+                                <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
                     </div>
@@ -418,7 +409,7 @@ const AdminDashboard = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {allOrders.map((order) => (
+                                {getPaginatedOrders().map((order) => (
                                     <tr key={order._id} className="hover:bg-gray-50">
                                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900">#{order._id.slice(-8)}</div>
@@ -487,20 +478,20 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Pagination */}
-                    {allOrders.length > 0 && (
+                    {totalPages > 1 && (
                         <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
                             <div className="flex-1 flex justify-between sm:hidden">
                                 <button
                                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                     disabled={currentPage === 1}
-                                    className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                    className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Previous
                                 </button>
                                 <button
-                                    onClick={() => setCurrentPage(Math.min(1, currentPage + 1))}
-                                    disabled={currentPage === 1}
-                                    className="ml-3 relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="ml-3 relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Next
                                 </button>
@@ -508,9 +499,9 @@ const AdminDashboard = () => {
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-sm text-gray-700">
-                                        Showing <span className="font-medium">{1}</span> to{' '}
-                                        <span className="font-medium">{Math.min(1, allOrders.length)}</span> of{' '}
-                                        <span className="font-medium">{allOrders.length}</span> results
+                                        Showing <span className="font-medium">{((currentPage - 1) * ordersPerPage) + 1}</span> to{' '}
+                                        <span className="font-medium">{Math.min(currentPage * ordersPerPage, totalOrders)}</span> of{' '}
+                                        <span className="font-medium">{totalOrders}</span> results
                                     </p>
                                 </div>
                                 <div>
@@ -518,26 +509,30 @@ const AdminDashboard = () => {
                                         <button
                                             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                             disabled={currentPage === 1}
-                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <ChevronLeft className="h-5 w-5" />
                                         </button>
-                                        {Array.from({ length: 1 }, (_, i) => i + 1).map((page) => (
-                                            <button
-                                                key={page}
-                                                onClick={() => setCurrentPage(page)}
-                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === page
-                                                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            const page = i + Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                                            return (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                                        currentPage === page
+                                                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                                                     }`}
-                                            >
-                                                {page}
-                                            </button>
-                                        ))}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        })}
                                         <button
-                                            onClick={() => setCurrentPage(Math.min(1, currentPage + 1))}
-                                            disabled={currentPage === 1}
-                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <ChevronRight className="h-5 w-5" />
                                         </button>

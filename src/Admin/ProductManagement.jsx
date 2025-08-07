@@ -14,6 +14,9 @@ const ProductManagement = () => {
         name: 'Indian Rupee'
     };
 
+    // Pagination configuration
+    const ITEMS_PER_PAGE = 10;
+
     const [products, setProducts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [inputValue, setInputValue] = useState('');
@@ -29,6 +32,32 @@ const ProductManagement = () => {
     const [lastRefresh, setLastRefresh] = useState(null);
 
     const { adminToken } = useAuth();
+
+    // Pagination helper functions
+    const getPaginatedData = (data, page, itemsPerPage = ITEMS_PER_PAGE) => {
+        if (!Array.isArray(data) || data.length === 0) return [];
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return data.slice(startIndex, endIndex);
+    };
+
+    const getTotalPages = (totalItems, itemsPerPage = ITEMS_PER_PAGE) => {
+        if (totalItems <= 0) return 1;
+        return Math.ceil(totalItems / itemsPerPage);
+    };
+
+    const getPageInfo = (currentPage, totalItems, itemsPerPage = ITEMS_PER_PAGE) => {
+        if (totalItems <= 0) return { startItem: 0, endItem: 0 };
+        const startItem = ((currentPage - 1) * itemsPerPage) + 1;
+        const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+        return { startItem, endItem };
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
 
     // Format currency function
     const formatCurrency = (amount) => {
@@ -96,12 +125,12 @@ const ProductManagement = () => {
                 // Store all products for filtering
                 window.allProductsCache = response.data.products || [];
                 
-                // Set initial display (paginate the first 10 products)
+                // Set initial display (paginate the first 2 products)
                 const allProducts = response.data.products || [];
-                const firstPageProducts = allProducts.slice(0, 10);
+                const firstPageProducts = getPaginatedData(allProducts, 1);
                 setProducts(firstPageProducts);
                 setTotalProducts(allProducts.length);
-                setTotalPages(Math.ceil(allProducts.length / 10));
+                setTotalPages(getTotalPages(allProducts.length));
                 
                 setLastRefresh(new Date());
                 
@@ -226,6 +255,11 @@ const ProductManagement = () => {
         };
     }, [adminToken]);
 
+    // Reset current page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, categoryFilter]);
+
     // Re-filter when search term, category filter, or page changes
     useEffect(() => {
         if (window.allProductsCache) {
@@ -250,13 +284,11 @@ const ProductManagement = () => {
             }
             
             // Client-side pagination
-            const startIndex = (currentPage - 1) * 10;
-            const endIndex = startIndex + 10;
-            const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+            const paginatedProducts = getPaginatedData(filteredProducts, currentPage);
             
             setProducts(paginatedProducts);
             setTotalProducts(filteredProducts.length);
-            setTotalPages(Math.ceil(filteredProducts.length / 10));
+            setTotalPages(getTotalPages(filteredProducts.length));
         }
     }, [searchTerm, categoryFilter, currentPage]);
 
@@ -558,14 +590,14 @@ const ProductManagement = () => {
                         <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
                             <div className="flex-1 flex justify-between sm:hidden">
                                 <button
-                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                                     disabled={currentPage === 1}
                                     className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Previous
                                 </button>
                                 <button
-                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                                     disabled={currentPage === totalPages}
                                     className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -575,15 +607,22 @@ const ProductManagement = () => {
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-sm text-gray-700">
-                                        Showing <span className="font-medium">{((currentPage - 1) * 10) + 1}</span> to{' '}
-                                        <span className="font-medium">{Math.min(currentPage * 10, totalProducts)}</span> of{' '}
-                                        <span className="font-medium">{totalProducts}</span> results
+                                        {(() => {
+                                            const { startItem, endItem } = getPageInfo(currentPage, totalProducts);
+                                            return (
+                                                <>
+                                                    Showing <span className="font-medium">{startItem}</span> to{' '}
+                                                    <span className="font-medium">{endItem}</span> of{' '}
+                                                    <span className="font-medium">{totalProducts}</span> results
+                                                </>
+                                            );
+                                        })()}
                                     </p>
                                 </div>
                                 <div>
                                     <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                                     <button
-                                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                                         disabled={currentPage === 1}
                                             className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
@@ -594,7 +633,7 @@ const ProductManagement = () => {
                                         return (
                                             <button
                                                 key={page}
-                                                onClick={() => setCurrentPage(page)}
+                                                onClick={() => handlePageChange(page)}
                                                     className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                                                         currentPage === page
                                                             ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
@@ -606,7 +645,7 @@ const ProductManagement = () => {
                                         );
                                     })}
                                     <button
-                                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                                         disabled={currentPage === totalPages}
                                             className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
