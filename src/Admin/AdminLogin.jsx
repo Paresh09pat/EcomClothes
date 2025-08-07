@@ -26,7 +26,7 @@ const AdminLogin = () => {
             
             if (res.status === 200 && res.data) {
                 adminlogin(res.data);
-                navigate('/product-form');
+                navigate('/admin/dashboard');
             }
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Admin login failed. Please try again.';
@@ -40,7 +40,7 @@ const AdminLogin = () => {
 
     useEffect(() => {
         if (localStorage.getItem('_token_ecommerce_admin')) {
-            navigate('/product-form');
+            navigate('/admin/dashboard');
         }
     }, []);
 

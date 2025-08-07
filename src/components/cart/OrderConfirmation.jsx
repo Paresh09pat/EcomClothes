@@ -10,6 +10,24 @@ const OrderConfirmation = ({ order }) => {
   const deliveryDate = new Date(orderDate);
   deliveryDate.setDate(deliveryDate.getDate() + 5);
   
+  // Function to get product image with proper fallback
+  const getProductImage = (item) => {
+    if (item.product) {
+      // Check for images field first (Cloudinary objects with url property)
+      if (item.product.images && item.product.images.length > 0) {
+        return typeof item.product.images[0] === 'object' && item.product.images[0].url 
+          ? item.product.images[0].url 
+          : item.product.images[0];
+      }
+      // Check for imageUrls field as fallback
+      if (item.product.imageUrls && item.product.imageUrls.length > 0) {
+        return item.product.imageUrls[0];
+      }
+    }
+    // Return a proper fallback image
+    return '/cloth1.png'; // Using the existing image in public folder
+  };
+  
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100">
       {/* Top success banner */}
@@ -134,14 +152,11 @@ const OrderConfirmation = ({ order }) => {
               <div key={item._id} className="flex items-center p-4 hover:bg-gray-50">
                 <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                   <img
-                    src={item.product && item.product.images && item.product.images.length > 0 
-                      ? item.product.images[0]
-                      : '/placeholder-image.jpg'
-                    }
+                    src={getProductImage(item)}
                     alt={item.product ? item.product.name : 'Product'}
                     className="h-full w-full object-cover object-center"
                     onError={(e) => {
-                      e.target.src = '/placeholder-image.jpg';
+                      e.target.src = '/cloth1.png';
                     }}
                   />
                 </div>

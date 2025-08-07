@@ -18,10 +18,13 @@ const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const [selectedSize, setSelectedSize] = useState('');
   const { token } = useAuth()
-  // Handle imageUrls that might be a JSON string instead of array
+  // Handle images with proper fallback for both images and imageUrls arrays
   let image;
   if (product?.images?.length > 0) {
-    image = product.images;
+    // Handle Cloudinary objects with url property
+    image = product.images.map(img => 
+      typeof img === 'object' && img.url ? img.url : img
+    );
   } else if (product?.imageUrls) {
     // Parse imageUrls if it's a string, otherwise use as-is
     if (typeof product.imageUrls === 'string') {
@@ -154,6 +157,9 @@ const ProductCard = ({ product }) => {
                 alt={product.name}
                 className="h-full w-full object-cover object-center transform transition-all duration-700 ease-in-out group-hover:scale-105"
                 style={{ height: '256px' }} /* Fixed height for consistency */
+                onError={(e) => {
+                  e.target.src = '/placeholder-image.jpg';
+                }}
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center bg-gray-200">

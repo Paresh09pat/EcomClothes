@@ -11,6 +11,8 @@ import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import axios from 'axios';
+import { baseUrl } from '../utils/constant';
 
 const WishlistPage = () => {
   const { addToCart } = useCart();
@@ -19,7 +21,9 @@ const WishlistPage = () => {
     getWishlist, 
     toggleWishlist, 
     wishlistLoading, 
-    isAuthenticated 
+    isAuthenticated,
+    token,
+    setCartitems
   } = useAuth();
   const [selectedSizes, setSelectedSizes] = useState({});
 
@@ -51,7 +55,7 @@ const WishlistPage = () => {
   };
 
   // Function to handle moving item to cart
-  const handleMoveToCart = (product) => {
+  const handleMoveToCart = async (product) => {
     // Parse available sizes
     let availableSizes = [];
     if (product?.size) {
@@ -72,18 +76,31 @@ const WishlistPage = () => {
       return;
     }
 
-    // Create a cart-compatible product object with id instead of _id
-    const cartProduct = {
-      ...product,
-      id: product._id, // Map _id to id for cart context
-      selectedSize: selectedSizes[product._id] || null,
-    };
-    
-    addToCart(cartProduct);
-    toast.success('Product added to cart!');
-    
-    // Optionally remove from wishlist after adding to cart
-    handleRemoveFromWishlist(product);
+    try {
+      // Add to cart via API
+      const res = await axios.post(`${baseUrl}/v1/cart/add`,
+        {
+          productId: product._id,
+          quantity: 1,
+          size: selectedSizes[product._id] || null
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        });
+
+      if (res.data.success) {
+        toast.success(res.data.message || 'Product added to cart!');
+        setCartitems((prev) => !prev); // Trigger cart refresh
+        
+        // Remove from wishlist after successfully adding to cart
+        await handleRemoveFromWishlist(product);
+      }
+    } catch (err) {
+      console.log(err.response?.data?.message || err.message);
+      toast.error(err.response?.data?.message || 'Failed to add product to cart');
+    }
   };
 
   if (!isAuthenticated) {
@@ -161,10 +178,13 @@ const WishlistPage = () => {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {wishlist.map((item) => {
-                  // Handle imageUrls that might be a JSON string instead of array
+                  // Handle images with proper fallback for both images and imageUrls arrays
                   let image;
                   if (item?.images?.length > 0) {
-                    image = item.images[0];
+                    // Handle Cloudinary objects with url property
+                    image = typeof item.images[0] === 'object' && item.images[0].url 
+                      ? item.images[0].url 
+                      : item.images[0];
                   } else if (item?.imageUrls) {
                     if (typeof item.imageUrls === 'string') {
                       try {
@@ -227,6 +247,9 @@ const WishlistPage = () => {
                             src={image}
                         alt={item.name} 
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          e.target.src = '/placeholder-image.jpg';
+                        }}
                       />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gray-200">

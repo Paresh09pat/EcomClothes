@@ -9,7 +9,6 @@ import {
   XMarkIcon,
   HeartIcon,
   MagnifyingGlassIcon,
-  PhoneIcon
 } from '@heroicons/react/24/outline';
 import { useCart } from '../../contexts/CartContext';
 
@@ -71,10 +70,10 @@ const Header = () => {
       <div className="bg-indigo-600 text-white py-2 text-sm hidden md:block">
         <div className="container flex justify-between items-center">
           <div className="flex items-center">
-            <PhoneIcon className="h-4 w-4 mr-1" />
-            <span>+1 (555) 123-4567</span>
+            {/* <PhoneIcon className="h-4 w-4 mr-1" /> */}
+            {/* <span>+1 (555) 123-4567</span>
             <span className="mx-3">|</span>
-            <span>Free shipping on orders over ₹5,000</span>
+            <span>Free shipping on orders over ₹5,000</span> */}
           </div>
           <div className="flex space-x-4">
             <Link to="#" className="hover:text-indigo-200 transition-colors">Track Order</Link>

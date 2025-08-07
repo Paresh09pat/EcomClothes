@@ -171,9 +171,12 @@ const CheckoutPage = () => {
                     <li key={`${item._id || item.product._id}-${selectedSize || 'no-size'}`} className="py-4 flex">
                       <div className="flex-shrink-0 w-16 h-16">
                         <img
-                          src={item.product?.imageUrls?.[0] || item.product?.image || item.image}
+                          src={item.product?.imageUrls?.[0] || item.product?.images?.[0] || item.image || '/cloth1.png'}
                           alt={item.product?.name || item.name}
                           className="w-full h-full object-cover object-center rounded"
+                          onError={(e) => {
+                            e.target.src = '/cloth1.png';
+                          }}
                         />
                       </div>
                       <div className="ml-4 flex-1">

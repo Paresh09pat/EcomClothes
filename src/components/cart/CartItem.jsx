@@ -26,8 +26,24 @@ const CartItem = ({ item }) => {
   const discountPercentage = 20;
   const originalPrice = product.price * 1.25;
 
-  const images = product.images.length > 0 ? product.images : product.imageUrls
-  console.log("images", images)
+  // Function to get product image with proper fallback
+  const getProductImage = () => {
+    // Check for images field first (Cloudinary objects with url property)
+    if (product.images && product.images.length > 0) {
+      return typeof product.images[0] === 'object' && product.images[0].url 
+        ? product.images[0].url 
+        : product.images[0];
+    }
+    // Check for imageUrls field as fallback
+    if (product.imageUrls && product.imageUrls.length > 0) {
+      return product.imageUrls[0];
+    }
+    // Return a proper fallback image
+    return '/cloth1.png';
+  };
+
+  const productImage = getProductImage();
+  console.log("productImage", productImage)
 
 
   const handleQuantityChange = (newQuantity) => {
@@ -97,17 +113,14 @@ const CartItem = ({ item }) => {
         {/* Product Image */}
         <div className="flex-shrink-0 w-full sm:w-32 h-32 mb-4 sm:mb-0 relative group">
           <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300 rounded-md"></div>
-          {
-            images.map((item) => {
-              return < img
-                src={item}
-                alt={item}
-                className="h-full w-full object-cover object-center rounded-md border border-gray-200"
-              />
-
-            }
-            )
-          }
+          <img
+            src={productImage}
+            alt={product.name}
+            className="h-full w-full object-cover object-center rounded-md border border-gray-200"
+            onError={(e) => {
+              e.target.src = '/cloth1.png';
+            }}
+          />
           {discountPercentage > 0 && (
             <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
               {discountPercentage}% OFF

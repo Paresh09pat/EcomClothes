@@ -13,7 +13,7 @@ const ProductDetailPage = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token, setCartitems } = useAuth();
   const navigate = useNavigate();
 
   const fetchProduct = async () => {
@@ -47,7 +47,10 @@ const ProductDetailPage = () => {
 
   let image;
   if (product?.images?.length > 0) {
-    image = product.images;
+    // Handle Cloudinary objects with url property
+    image = product.images.map(img => 
+      typeof img === 'object' && img.url ? img.url : img
+    );
   } else if (product?.imageUrls) {
     // Parse imageUrls if it's a string, otherwise use as-is
     if (typeof product.imageUrls === 'string') {
@@ -87,7 +90,7 @@ const ProductDetailPage = () => {
     setQuantity(parseInt(e.target.value));
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!isAuthenticated) {
       navigate('/login');
       return;
@@ -100,15 +103,28 @@ const ProductDetailPage = () => {
         return;
       }
 
-      // Create a cart-compatible product object
-      const cartProduct = {
-        ...product,
-        id: product._id, // Map _id to id for cart context
-        selectedSize: selectedSize || null,
-      };
+      try {
+        // Add to cart via API
+        const res = await axios.post(`${baseUrl}/v1/cart/add`,
+          {
+            productId: product._id,
+            quantity: quantity,
+            size: selectedSize || null
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+          });
 
-      addToCart(cartProduct, quantity);
-      toast.success('Product added to cart!');
+        if (res.data.success) {
+          toast.success(res.data.message || 'Product added to cart!');
+          setCartitems((prev) => !prev); // Trigger cart refresh
+        }
+      } catch (err) {
+        console.log(err.response?.data?.message || err.message);
+        toast.error(err.response?.data?.message || 'Failed to add product to cart');
+      }
     }
   };
 

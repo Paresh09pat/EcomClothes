@@ -15,10 +15,13 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import WishlistPage from './pages/WishlistPage';
+import ProfilePage from './pages/ProfilePage';
 
 import AdminLogin from './Admin/AdminLogin';
 import AdminProtect from './components/auth/AdminProtect';
 import ProductForm from './Admin/ProductForm';
+import AdminLayout from './Admin/AdminLayout';
+import AdminRedirect from './Admin/AdminRedirect';
 
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
@@ -54,25 +57,26 @@ function App() {
 
 
 
-                {/* Admin Protected Route */}
+                {/* Admin Protected Routes */}
                 <Route
-                  path="/product-form"
+                  path="/admin"
                   element={
                     <AdminProtect>
-                      <ProductForm />
+                      <AdminLayout />
                     </AdminProtect>
                   }
-                />
-                <Route
-                  path="/edit-product/:productId"
-                  element={
-                    <AdminProtect>
-                      <ProductForm />
-                    </AdminProtect>
-                  }
-                />
-                <Route path="/admin-dashboard" element={<AdminProtect><AdminDashboard /></AdminProtect>} />
-                <Route path="/product-management" element={<AdminProtect><ProductManagement /></AdminProtect>} />
+                >
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="product-form" element={<ProductForm />} />
+                  <Route path="edit-product/:productId" element={<ProductForm />} />
+                  <Route path="product-management" element={<ProductManagement />} />
+                </Route>
+
+                {/* Legacy admin routes for backward compatibility */}
+                <Route path="/admin-dashboard" element={<AdminProtect><AdminRedirect to="/admin/dashboard" /></AdminProtect>} />
+                <Route path="/product-form" element={<AdminProtect><AdminRedirect to="/admin/product-form" /></AdminProtect>} />
+                <Route path="/edit-product/:productId" element={<AdminProtect><AdminRedirect to="/admin/edit-product/:productId" /></AdminProtect>} />
+                <Route path="/product-management" element={<AdminProtect><AdminRedirect to="/admin/product-management" /></AdminProtect>} />
 
 
                 <Route element={<Layout />}>
@@ -94,6 +98,7 @@ function App() {
                   <Route path="order-confirmation" element={<OrderConfirmationPage />} />
                   <Route path="orders" element={<OrderHistoryPage />} />
                   <Route path="wishlist" element={<WishlistPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
                   <Route path="privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="terms-and-conditions" element={<TermsAndConditions />} />
                 </Route>

@@ -60,7 +60,7 @@ const ProductForm = () => {
                 
                 if (!product) {
                     toast.error("Product not found");
-                    navigate("/product-management");
+                    navigate("/admin/product-management");
                     return;
                 }
                 
@@ -89,12 +89,12 @@ const ProductForm = () => {
                 }
             } else {
                 toast.error("Failed to load product data");
-                navigate("/product-management");
+                navigate("/admin/product-management");
             }
         } catch (error) {
             console.error("Error loading product:", error);
             toast.error("Failed to load product data");
-            navigate("/product-management");
+            navigate("/admin/product-management");
         } finally {
             setLoadingProduct(false);
         }
@@ -271,7 +271,7 @@ const ProductForm = () => {
                     headers
                 });
                 toast.success("Product updated successfully");
-                navigate("/product-management");
+                navigate("/admin/product-management");
             } else {
                 // Create new product
                 res = await axios.post(`${baseUrl}/admin/add-product`, dataToSend, {
@@ -333,41 +333,6 @@ const ProductForm = () => {
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-4xl mx-auto">
-                {/* Admin Header with Logout */}
-                <div className="bg-white rounded-lg shadow-sm mb-6 p-4">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-                            <p className="text-sm text-gray-500">Product Management Dashboard</p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-gray-900">Admin Session</p>
-                                <p className="text-xs text-green-600">● Active</p>
-                            </div>
-                            <button
-                                onClick={handleLogout}
-                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                                <span>Logout</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className=" my-6">
-                    <Link to="/admin-dashboard">
-                        <button
-                            className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-200 ease-in-out"
-                        >
-                            Go To Dashboard
-                        </button>
-                    </Link>
-                </div>
-
                 {/* Product Form */}
                 <form
                     onSubmit={handleSubmit}

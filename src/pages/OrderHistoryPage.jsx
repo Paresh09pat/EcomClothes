@@ -92,6 +92,24 @@ const OrderHistoryPage = () => {
     alert(`Return process initiated for order #${orderId.slice(-8).toUpperCase()}. Please check your email for return instructions.`);
   };
   
+  // Function to get product image with proper fallback
+  const getProductImage = (item) => {
+    if (item.product) {
+      // Check for images field first (Cloudinary objects with url property)
+      if (item.product.images && item.product.images.length > 0) {
+        return typeof item.product.images[0] === 'object' && item.product.images[0].url 
+          ? item.product.images[0].url 
+          : item.product.images[0];
+      }
+      // Check for imageUrls field as fallback
+      if (item.product.imageUrls && item.product.imageUrls.length > 0) {
+        return item.product.imageUrls[0];
+      }
+    }
+    // Return a proper fallback image
+    return '/cloth1.png'; // Using the existing image in public folder
+  };
+  
   if (!user) {
     return (
       <div className="container py-12">
@@ -211,14 +229,11 @@ const OrderHistoryPage = () => {
                         <div key={item._id} className="flex flex-col sm:flex-row items-start sm:items-center py-2 border-b border-gray-100 last:border-0">
                           <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                             <img 
-                              src={item.product && item.product.images && item.product.images.length > 0 
-                                ? item.product.images[0]
-                                : '/placeholder-image.jpg'
-                              } 
+                              src={getProductImage(item)}
                               alt={item.product ? item.product.name : 'Product'} 
                               className="w-full h-full object-cover"
                               onError={(e) => {
-                                e.target.src = '/placeholder-image.jpg';
+                                e.target.src = '/cloth1.png';
                               }}
                             />
                           </div>

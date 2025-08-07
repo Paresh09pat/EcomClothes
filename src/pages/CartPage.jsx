@@ -84,7 +84,7 @@ const CartPage = () => {
           <div className="bg-white rounded-lg shadow-md p-8">
             <p className="text-gray-500 mb-6">Your cart is empty</p>
             <Link to="/" className="btn bg-indigo-600 hover:bg-indigo-700">
-              Continue Shopping
+              Continue Shopping 
             </Link>
           </div>
         </div>
@@ -153,7 +153,7 @@ const CartPage = () => {
 
               <Link
                 to="/"
-                className="w-full mt-4 btn border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 px-4 rounded-md text-center block"
+                className="w-full mt-4 btn border border-gray-300 text-black py-3 px-4 rounded-md text-center block bg-white"
               >
                 Continue Shopping
               </Link>

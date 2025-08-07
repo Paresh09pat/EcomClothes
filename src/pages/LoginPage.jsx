@@ -23,8 +23,9 @@ const LoginPage = () => {
       const res = await axios.post(`${baseUrl}/v1/auth/login`, { email, password });
       
       if (res.status === 200 && res.data) {
-        login(res.data);
+        login(res?.data);
         navigate('/');
+        localStorage.setItem('_token_ecommerce', res?.data?.token);  
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';

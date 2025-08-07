@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Edit, Trash2, Eye, Package, Truck, CheckCircle, Clock, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Edit, Trash2, Eye, Package, Truck, CheckCircle, Clock, Filter, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { baseUrl } from '../utils/constant';
@@ -242,12 +242,23 @@ const AdminDashboard = () => {
         return `${items[0].product.name} +${items.length - 1} more`;
     };
 
+    // Get product image URL (handles both images and imageUrls arrays)
+    const getProductImageUrl = (product) => {
+        if (product.images && product.images.length > 0 && product.images[0].url) {
+            return product.images[0].url;
+        }
+        if (product.imageUrls && product.imageUrls.length > 0 && product.imageUrls[0]) {
+            return product.imageUrls[0];
+        }
+        return '/placeholder-image.jpg';
+    };
+
     console.log(orders);
     return (
-        <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
+        <div className="min-h-screen bg-gray-50">
             {/* Notification Toast */}
             {notification.show && (
-                <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl border-l-4 max-w-md transition-all duration-300 ${
+                <div className={`fixed top-4 right-2 sm:right-4 z-50 p-3 sm:p-4 rounded-lg shadow-xl border-l-4 max-w-xs sm:max-w-md transition-all duration-300 ${
                     notification.type === 'success' 
                         ? 'bg-white text-green-800 border-l-green-500 shadow-green-100' 
                         : 'bg-white text-red-800 border-l-red-500 shadow-red-100'
@@ -257,21 +268,21 @@ const AdminDashboard = () => {
                             notification.type === 'success' ? 'text-green-500' : 'text-red-500'
                         }`}>
                             {notification.type === 'success' ? (
-                                <CheckCircle size={20} />
+                                <CheckCircle size={18} className="sm:w-5 sm:h-5" />
                             ) : (
-                                <div className="w-5 h-5 rounded-full border-2 border-current flex items-center justify-center">
+                                <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-current flex items-center justify-center">
                                     <span className="text-xs font-bold">!</span>
                                 </div>
                             )}
                         </div>
-                        <div className="ml-3 flex-1">
-                            <p className="text-sm font-medium">{notification.message}</p>
+                        <div className="ml-2 sm:ml-3 flex-1">
+                            <p className="text-xs sm:text-sm font-medium">{notification.message}</p>
                         </div>
                         <button 
                             onClick={() => setNotification({ show: false, message: '', type: '' })}
-                            className="ml-4 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="ml-2 sm:ml-4 text-gray-400 hover:text-gray-600 transition-colors"
                         >
-                            <span className="text-lg">×</span>
+                            <span className="text-base sm:text-lg">×</span>
                         </button>
                     </div>
                 </div>
@@ -280,10 +291,10 @@ const AdminDashboard = () => {
             {/* Loading Overlay */}
             {loading && (
                 <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-40">
-                    <div className="bg-white p-6 rounded-lg shadow-lg">
-                        <div className="flex items-center gap-3">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                            <span>Processing...</span>
+                    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mx-4">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600"></div>
+                            <span className="text-sm sm:text-base">Processing...</span>
                         </div>
                     </div>
                 </div>
@@ -291,97 +302,93 @@ const AdminDashboard = () => {
 
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Management Dashboard</h1>
-                        <p className="text-gray-600">Manage and track all your e-commerce orders</p>
-                    </div>
-                    <Link to="/product-form" className='bg-blue-500 text-white px-4 py-2 rounded-md'>Add Product</Link>
-                    <Link to="/product-management" className='bg-blue-500 text-white px-4 py-2 rounded-md'>Product Management</Link>
+                <div className="mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Order Management Dashboard</h1>
+                    <p className="text-sm sm:text-base text-gray-600">Manage and track all your e-commerce orders</p>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                                <p className="text-2xl font-bold text-gray-900">{allOrders.length}</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Orders</p>
+                                <p className="text-xl sm:text-2xl font-bold text-gray-900">{allOrders.length}</p>
                             </div>
-                            <div className="p-3 bg-blue-100 rounded-full">
-                                <Package className="h-6 w-6 text-blue-600" />
+                            <div className="p-2 sm:p-3 bg-blue-100 rounded-full">
+                                <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Pending</p>
-                                <p className="text-2xl font-bold text-yellow-600">{getStatusCount('Pending')}</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600">Pending</p>
+                                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{getStatusCount('Pending')}</p>
                             </div>
-                            <div className="p-3 bg-yellow-100 rounded-full">
-                                <Clock className="h-6 w-6 text-yellow-600" />
+                            <div className="p-2 sm:p-3 bg-yellow-100 rounded-full">
+                                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Processing</p>
-                                <p className="text-2xl font-bold text-blue-600">{getStatusCount('Processing')}</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600">Processing</p>
+                                <p className="text-xl sm:text-2xl font-bold text-blue-600">{getStatusCount('Processing')}</p>
                             </div>
-                            <div className="p-3 bg-blue-100 rounded-full">
-                                <Package className="h-6 w-6 text-blue-600" />
+                            <div className="p-2 sm:p-3 bg-blue-100 rounded-full">
+                                <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Shipped</p>
-                                <p className="text-2xl font-bold text-indigo-600">{getStatusCount('Shipped')}</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600">Shipped</p>
+                                <p className="text-xl sm:text-2xl font-bold text-indigo-600">{getStatusCount('Shipped')}</p>
                             </div>
-                            <div className="p-3 bg-indigo-100 rounded-full">
-                                <Truck className="h-6 w-6 text-indigo-600" />
+                            <div className="p-2 sm:p-3 bg-indigo-100 rounded-full">
+                                <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Delivered</p>
-                                <p className="text-2xl font-bold text-green-600">{getStatusCount('Delivered')}</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600">Delivered</p>
+                                <p className="text-xl sm:text-2xl font-bold text-green-600">{getStatusCount('Delivered')}</p>
                             </div>
-                            <div className="p-3 bg-green-100 rounded-full">
-                                <CheckCircle className="h-6 w-6 text-green-600" />
+                            <div className="p-2 sm:p-3 bg-green-100 rounded-full">
+                                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Filters and Search */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                    <div className="flex flex-col lg:flex-row gap-4">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <div className="flex-1">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
                                 <input
                                     type="text"
-                                    placeholder="Search by Order ID, Customer Name, Email, or Product..."
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Search orders..."
+                                    className="w-full pl-9 sm:pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     value={inputValue}
                                     onChange={handleInputChange}
                                 />
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Filter className="text-gray-400 h-5 w-5" />
+                            <Filter className="text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
                             <select
-                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
@@ -403,59 +410,60 @@ const AdminDashboard = () => {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Customer</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Items</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Payment</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Date</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {allOrders.map((order) => (
                                     <tr key={order._id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900">#{order._id.slice(-8)}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                                             <div>
                                                 <div className="text-sm font-medium text-gray-900">{order.user.name}</div>
                                                 <div className="text-sm text-gray-500">{order.user.email}</div>
                                                 <div className="text-sm text-gray-500">{order.user.phone}</div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-3 sm:px-6 py-4 hidden md:table-cell">
                                             <div className="text-sm text-gray-900">
                                                 {getOrderItemsSummary(order.items)}
                                             </div>
                                             <div className="text-sm text-gray-500">{order.items.length} item(s)</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900">{formatCurrency(order.totalAmount)}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                                                 {getStatusIcon(order.status)}
-                                                {order.status}
+                                                <span className="hidden sm:inline">{order.status}</span>
+                                                <span className="sm:hidden">{order.status.split(' ')[0]}</span>
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                                             <div className="text-sm text-gray-900 capitalize">{order.paymentMethod}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                                             {new Date(order.createdAt).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div className="flex items-center gap-2">
+                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div className="flex items-center gap-1 sm:gap-2">
                                                 <button
                                                     onClick={() => setSelectedOrder(order)}
                                                     disabled={loading}
                                                     className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-900'}`}
                                                     title="View Details"
                                                 >
-                                                    <Eye size={16} />
+                                                    <Eye size={14} className="sm:w-4 sm:h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => setEditingOrder(order)}
@@ -463,7 +471,7 @@ const AdminDashboard = () => {
                                                     className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-green-600 hover:text-green-900'}`}
                                                     title="Edit Order"
                                                 >
-                                                    <Edit size={16} />
+                                                    <Edit size={14} className="sm:w-4 sm:h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => deleteOrder(order._id)}
@@ -471,7 +479,7 @@ const AdminDashboard = () => {
                                                     className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
                                                     title="Delete Order"
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Trash2 size={14} className="sm:w-4 sm:h-4" />
                                                 </button>
                                             </div>
                                         </td>
@@ -482,84 +490,95 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Pagination */}
-                    {/* {totalPages > 1 && ( */}
-                    <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                        <div className="flex-1 flex justify-between sm:hidden">
-                            <button
-                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                // g352disabled={currentPage === 1}
-                                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                            >
-                                Previous
-                            </button>
-                            <button
-                                onClick={() => setCurrentPage(Math.min(1, currentPage + 1))}
-                                // disabled={currentPage === totalPages}
-                                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                            >
-                                Next
-                            </button>
-                        </div>
-                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                            <div>
-                                <p className="text-sm text-gray-700">
-                                    Showing <span className="font-medium">{1}</span> to{' '}
-                                    <span className="font-medium">{Math.min(1 + 1, allOrders.length)}</span> of{' '}
-                                    <span className="font-medium">{allOrders.length}</span> results
-                                </p>
+                    {allOrders.length > 0 && (
+                        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                            <div className="flex-1 flex justify-between sm:hidden">
+                                <button
+                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    disabled={currentPage === 1}
+                                    className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                >
+                                    Previous
+                                </button>
+                                <button
+                                    onClick={() => setCurrentPage(Math.min(1, currentPage + 1))}
+                                    disabled={currentPage === 1}
+                                    className="ml-3 relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                >
+                                    Next
+                                </button>
                             </div>
-                            <div>
-                                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                    <button
-                                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                        // disabled={currentPage === 1}
-                                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                    >
-                                        <ChevronLeft className="h-5 w-5" />
-                                    </button>
-                                    {Array.from({ length: 1 }, (_, i) => i + 1).map((page) => (
+                            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-700">
+                                        Showing <span className="font-medium">{1}</span> to{' '}
+                                        <span className="font-medium">{Math.min(1, allOrders.length)}</span> of{' '}
+                                        <span className="font-medium">{allOrders.length}</span> results
+                                    </p>
+                                </div>
+                                <div>
+                                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                                         <button
-                                            key={page}
-                                            onClick={() => setCurrentPage(page)}
-                                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === page
-                                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                }`}
+                                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                            disabled={currentPage === 1}
+                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                                         >
-                                            {page}
+                                            <ChevronLeft className="h-5 w-5" />
                                         </button>
-                                    ))}
-                                    <button
-                                        onClick={() => setCurrentPage(Math.min(1, currentPage + 1))}
-                                        // disabled={currentPage === totalPages}
-                                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                    >
-                                        <ChevronRight className="h-5 w-5" />
-                                    </button>
-                                </nav>
+                                        {Array.from({ length: 1 }, (_, i) => i + 1).map((page) => (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === page
+                                                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setCurrentPage(Math.min(1, currentPage + 1))}
+                                            disabled={currentPage === 1}
+                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                                        >
+                                            <ChevronRight className="h-5 w-5" />
+                                        </button>
+                                    </nav>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {/* )} */}
+                    )}
+                    
+                    {/* Empty State */}
+                    {allOrders.length === 0 && (
+                        <div className="bg-white px-4 py-12 text-center border-t border-gray-200">
+                            <div className="text-gray-500">
+                                <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+                                <p className="text-sm text-gray-500">No orders match your current filters.</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Order Details Modal */}
             {selectedOrder && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold text-gray-900">Order Details</h2>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+                        <div className="p-4 sm:p-6">
+                            <div className="flex justify-between items-center mb-4 sm:mb-6">
+                                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Order Details</h2>
                                 <button
                                     onClick={() => setSelectedOrder(null)}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-gray-400 hover:text-gray-600 p-1"
                                 >
-                                    ×
+                                    <X className="h-6 w-6" />
                                 </button>
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-4 sm:space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <h3 className="font-semibold text-gray-900 mb-2">Order Information</h3>
@@ -586,19 +605,22 @@ const AdminDashboard = () => {
                                     <div className="space-y-2">
                                         {selectedOrder.items.map((item, index) => (
                                             <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2 sm:gap-3">
                                                     <img
-                                                        src={item.product.imageUrls[0]}
+                                                        src={getProductImageUrl(item.product)}
                                                         alt={item.product.name}
-                                                        className="w-12 h-12 object-cover rounded"
+                                                        className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded"
+                                                        onError={(e) => {
+                                                            e.target.src = '/placeholder-image.jpg';
+                                                        }}
                                                     />
-                                                    <div>
-                                                        <p className="font-medium">{item.product.name}</p>
-                                                        <p className="text-sm text-gray-600">Category: {item.product.category}</p>
-                                                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
+                                                        <p className="text-xs sm:text-sm text-gray-600">Category: {item.product.category}</p>
+                                                        <p className="text-xs sm:text-sm text-gray-600">Quantity: {item.quantity}</p>
                                                     </div>
                                                 </div>
-                                                <p className="font-medium">{formatCurrency(item.product.price)}</p>
+                                                <p className="font-medium text-sm sm:text-base ml-2">{formatCurrency(item.product.price)}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -617,26 +639,26 @@ const AdminDashboard = () => {
 
             {/* Edit Order Modal */}
             {editingOrder && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-6">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+                        <div className="p-4 sm:p-6">
+                            <div className="flex justify-between items-center mb-4 sm:mb-6">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900">Edit Order Status</h2>
+                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Edit Order Status</h2>
                                     <p className="text-sm text-gray-600 mt-1">Note: Only order status can be updated. Customer details are read-only.</p>
                                 </div>
                                 <button
                                     onClick={() => setEditingOrder(null)}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-gray-400 hover:text-gray-600 p-1"
                                 >
-                                    ×
+                                    <X className="h-6 w-6" />
                                 </button>
                             </div>
 
                             <div className="space-y-4">
-                                <div className="bg-gray-50 p-4 rounded-md mb-4">
+                                <div className="bg-gray-50 p-3 sm:p-4 rounded-md mb-4">
                                     <h3 className="text-sm font-medium text-gray-700 mb-3">Customer Information (Read-only)</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-600 mb-1">Customer Name</label>
                                             <input
@@ -667,7 +689,7 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
 
-                                <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
+                                <div className="bg-blue-50 p-3 sm:p-4 rounded-md border border-blue-200">
                                     <label className="block text-sm font-medium text-blue-900 mb-1">
                                         Update Order Status <span className="text-red-500">*</span>
                                     </label>
@@ -675,7 +697,7 @@ const AdminDashboard = () => {
                                         value={editingOrder.status}
                                         onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value })}
                                         disabled={loading}
-                                        className={`w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`w-full px-3 py-2 text-sm sm:text-base border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         required
                                     >
                                         <option value="Pending">Pending</option>
@@ -688,18 +710,18 @@ const AdminDashboard = () => {
                                     <p className="text-sm text-blue-700 mt-1">Current status: <span className="font-medium">{editingOrder.status}</span></p>
                                 </div>
 
-                                <div className="flex justify-end gap-3 pt-4">
+                                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
                                     <button
                                         onClick={() => setEditingOrder(null)}
                                         disabled={loading}
-                                        className={`px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={() => saveEditedOrder(editingOrder)}
                                         disabled={loading}
-                                        className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         {loading ? 'Updating...' : 'Update Status'}
                                     </button>

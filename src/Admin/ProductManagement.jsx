@@ -149,13 +149,40 @@ const ProductManagement = () => {
         }
     };
 
-    // Parse sizes from JSON string
-    const parseSizes = (sizeString) => {
+    // Parse sizes from JSON string or array of mixed strings/JSON strings
+    const parseSizes = (sizeData) => {
         try {
-            return JSON.parse(sizeString);
+            // If sizeData is already an array
+            if (Array.isArray(sizeData)) {
+                return sizeData.flatMap(item => {
+                    try {
+                        // Try to parse each item as JSON (in case it's a JSON string)
+                        const parsed = JSON.parse(item);
+                        return Array.isArray(parsed) ? parsed : [parsed];
+                    } catch {
+                        // If parsing fails, treat as regular string
+                        return [item];
+                    }
+                });
+            }
+            // If sizeData is a JSON string
+            const parsed = JSON.parse(sizeData);
+            return Array.isArray(parsed) ? parsed : [parsed];
         } catch {
+            // If all parsing fails, return empty array
             return [];
         }
+    };
+
+    // Get product image URL (handles both images and imageUrls arrays)
+    const getProductImageUrl = (product) => {
+        if (product.images && product.images.length > 0 && product.images[0].url) {
+            return product.images[0].url;
+        }
+        if (product.imageUrls && product.imageUrls.length > 0 && product.imageUrls[0]) {
+            return product.imageUrls[0];
+        }
+        return '/placeholder-image.jpg';
     };
 
     // Get unique categories
@@ -311,7 +338,7 @@ const ProductManagement = () => {
                             Refresh
                         </button>
                         <Link 
-                            to="/product-form" 
+                            to="/admin/product-form" 
                             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2"
                         >
                             <Plus size={20} />
@@ -438,10 +465,10 @@ const ProductManagement = () => {
                                                 <div className="flex-shrink-0 h-16 w-16">
                                                     <img
                                                         className="h-16 w-16 rounded-lg object-cover"
-                                                        src={product.imageUrls[0] || '/api/placeholder/64/64'}
+                                                        src={getProductImageUrl(product)}
                                                         alt={product.name}
                                                         onError={(e) => {
-                                                            e.target.src = '/api/placeholder/64/64';
+                                                            e.target.src = '/placeholder-image.jpg';
                                                         }}
                                                     />
                                                 </div>
@@ -506,7 +533,7 @@ const ProductManagement = () => {
                                                     <Eye size={16} />
                                             </button>
                                                 <Link
-                                                    to={`/edit-product/${product._id}`}
+                                                    to={`/admin/edit-product/${product._id}`}
                                                     className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed pointer-events-none' : 'text-green-600 hover:text-green-900'}`}
                                                     title="Edit Product"
                                                 >
@@ -611,7 +638,7 @@ const ProductManagement = () => {
                         {!searchTerm && categoryFilter === 'all' && (
                             <div className="mt-6">
                                 <Link
-                                    to="/product-form"
+                                    to="/admin/product-form"
                                     className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                     <Plus className="-ml-1 mr-2 h-5 w-5" />
@@ -645,11 +672,11 @@ const ProductManagement = () => {
                                 {/* Product Image */}
                                 <div className="flex justify-center">
                                     <img
-                                        src={selectedProduct.imageUrls[0] || '/api/placeholder/300/300'}
+                                        src={getProductImageUrl(selectedProduct)}
                                         alt={selectedProduct.name}
                                         className="w-64 h-64 object-cover rounded-lg shadow-md"
                                         onError={(e) => {
-                                            e.target.src = '/api/placeholder/300/300';
+                                            e.target.src = '/placeholder-image.jpg';
                                         }}
                                     />
                                 </div>

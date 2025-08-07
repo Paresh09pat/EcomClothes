@@ -111,6 +111,35 @@ export const AuthProvider = ({ children }) => {
     return wishlist.some(product => product._id === productId);
   }
 
+  // Update user profile
+  const updateUserProfile = async (updateData) => {
+    if (!token) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      const response = await axios.put(`${baseUrl}/v1/user/update-profile`, updateData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Update local user state with new data
+      if (response.data.success) {
+        setUser(prevUser => ({
+          ...prevUser,
+          ...response.data.user
+        }));
+      }
+
+      return response;
+    } catch (err) {
+      console.error('Profile update error:', err);
+      throw err;
+    }
+  };
+
   // Load wishlist on authentication change
   useEffect(() => {
     if (token && isAuthenticated) {
@@ -142,7 +171,8 @@ export const AuthProvider = ({ children }) => {
     isRemoved,
     setIsRemoved,
     setCartitems,
-    itemsCart
+    itemsCart,
+    updateUserProfile
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
