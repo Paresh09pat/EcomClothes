@@ -55,13 +55,9 @@ const Header = () => {
     { name: 'Men', path: '/categories/Men' },
     { name: 'Women', path: '/categories/Women' },
     { name: 'Kids', path: '/categories/Kids' },
-    { name: 'Accessories', path: '/categories/Accessories' },
-    { name: 'New Arrivals', path: '#' },
-    { name: 'Sale', path: '#' }
+   
   ];
 
-
-  console.log("wishlist",wishlist)
  
 
   return (
@@ -88,7 +84,7 @@ const Header = () => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="text-2xl font-bold">
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">FashionStore</span>
+              <img src="/logo.png" alt="logo" className="w-25 h-12" />
             </Link>
 
             {/* Desktop Navigation */}

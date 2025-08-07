@@ -23,7 +23,7 @@ const Footer = () => {
         {/* Top Section with Logo and Social Links */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 pb-8 border-b border-gray-800">
           <div className="mb-6 md:mb-0">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">FashionStore</h2>
+            <img src="/logo.png" alt="logo" className="w-25 h-12" />
           </div>
           
           <div className="flex space-x-6">
@@ -146,7 +146,7 @@ const Footer = () => {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} FashionStore. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} 0dhni. All rights reserved.</p>
           <div className="mt-4 md:mt-0 flex space-x-6">
             <Link to="#" className="hover:text-white transition-colors duration-300">Terms of Service</Link>
             <Link to="#" className="hover:text-white transition-colors duration-300">Privacy Policy</Link>

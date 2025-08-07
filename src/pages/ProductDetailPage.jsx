@@ -39,7 +39,6 @@ const ProductDetailPage = () => {
         }
       }
     } catch (error) {
-      console.error("Error fetching product:", error);
     } finally {
       setLoading(false);
     }
@@ -57,7 +56,6 @@ const ProductDetailPage = () => {
       try {
         image = JSON.parse(product.imageUrls);
       } catch (e) {
-        console.error('Error parsing imageUrls:', e);
         image = [product.imageUrls]; // Fallback to single item array
       }
     } else {
@@ -74,7 +72,6 @@ const ProductDetailPage = () => {
       try {
         availableSizes = JSON.parse(product.size);
       } catch (e) {
-        console.error('Error parsing sizes:', e);
         availableSizes = [product.size]; // Fallback to single item array
       }
     } else {
@@ -84,7 +81,7 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     fetchProduct();
-  }, [productId]); // Make sure to refetch if productId changes
+    }, [productId]); 
 
   const handleQuantityChange = (e) => {
     setQuantity(parseInt(e.target.value));
@@ -122,7 +119,6 @@ const ProductDetailPage = () => {
           setCartitems((prev) => !prev); // Trigger cart refresh
         }
       } catch (err) {
-        console.log(err.response?.data?.message || err.message);
         toast.error(err.response?.data?.message || 'Failed to add product to cart');
       }
     }

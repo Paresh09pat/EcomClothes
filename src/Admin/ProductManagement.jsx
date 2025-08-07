@@ -84,7 +84,6 @@ const ProductManagement = () => {
             if (forceRefresh) {
                 // Clear cache when force refreshing
                 window.allProductsCache = null;
-                console.log('Cache cleared - fetching fresh data');
             }
             
                 const response = await axios.get(`${baseUrl}/admin/get-all-products`, {
@@ -104,7 +103,6 @@ const ProductManagement = () => {
                 setTotalProducts(allProducts.length);
                 setTotalPages(Math.ceil(allProducts.length / 10));
                 
-                console.log(`Loaded ${allProducts.length} products from API`);
                 setLastRefresh(new Date());
                 
             } else {
@@ -209,14 +207,12 @@ const ProductManagement = () => {
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (!document.hidden && adminToken) {
-                console.log('Page became visible - refreshing products');
                 getAllProducts(true); // Force refresh when returning
             }
         };
 
         const handleFocus = () => {
             if (adminToken) {
-                console.log('Window focused - refreshing products');
                 getAllProducts(true); // Force refresh when window gets focus
             }
         };
@@ -326,7 +322,6 @@ const ProductManagement = () => {
                         </Link>
                         <button
                             onClick={async () => {
-                                console.log('Manual refresh triggered');
                                 await getAllProducts(true); // Force refresh
                                 showNotification('Products refreshed!', 'success');
                             }}

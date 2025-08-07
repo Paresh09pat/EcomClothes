@@ -14,7 +14,6 @@ const CartPage = () => {
   const { token, isRemoved, setIsRemoved } = useAuth()
   const [shipping, setShipping] = useState();
 
-  console.log("cart", cart);
 
   const getCart = async () => {
     try {
@@ -23,12 +22,10 @@ const CartPage = () => {
           Authorization: `Bearer ${token}`
         }
       });
-      console.log(res);
       setCart(res?.data?.cart);
       setTotal(res?.data?.totalAmount);
       setIsLoading(false);
     } catch (err) {
-      console.log(err);
     }
     finally {
       setIsLoading(false);
@@ -40,7 +37,6 @@ const CartPage = () => {
     getCart();
   }, [isRemoved]);
 
-  console.log("isLoading", isLoading);
 
   const clearCart = async () => {
     try {
@@ -49,18 +45,14 @@ const CartPage = () => {
           Authorization: `Bearer ${token}`
         }
       });
-      console.log(res);
       getCart();
     } catch (err) {
-      console.log(err);
     }
   }
 
   const prod = cart?.map((item) => {
-    console.log("item", item);
-  })
+    })
 
-  console.log("prod", prod);
   // Show loading state while cart is being loaded from localStorage
   if (isLoading) {
     return (

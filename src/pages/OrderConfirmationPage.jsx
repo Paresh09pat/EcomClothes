@@ -22,7 +22,6 @@ const OrderConfirmationPage = () => {
         }
       });
       
-      console.log("orders", response.data);
       
       // Get the most recent order (first in the array since they seem to be sorted by creation date desc)
       if (response.data.orders && response.data.orders.length > 0) {
@@ -34,7 +33,7 @@ const OrderConfirmationPage = () => {
         setTimeout(() => navigate('/'), 2000);
       }
     } catch (err) {
-      console.error('Error fetching orders:', err);
+        
       setError('Failed to load order details');
       // Redirect to home on error
       setTimeout(() => navigate('/'), 2000);

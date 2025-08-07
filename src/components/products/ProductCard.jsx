@@ -31,7 +31,6 @@ const ProductCard = ({ product }) => {
       try {
         image = JSON.parse(product.imageUrls);
       } catch (e) {
-        console.error('Error parsing imageUrls:', e);
         image = [product.imageUrls]; // Fallback to single item array
       }
     } else {
@@ -48,7 +47,6 @@ const ProductCard = ({ product }) => {
       try {
         availableSizes = JSON.parse(product.size);
       } catch (e) {
-        console.error('Error parsing sizes:', e);
         availableSizes = [product.size]; // Fallback to single item array
       }
     } else {
@@ -85,7 +83,6 @@ const ProductCard = ({ product }) => {
         setCartitems((prev)=>!prev)
       }
     } catch (err) {
-      console.log(err.response.data.message);
       toast.error(err.response.data.message);
     }
   }
@@ -110,8 +107,7 @@ const ProductCard = ({ product }) => {
           : 'Product added to wishlist!';
         toast.success(response.data.message || message);
       }
-    } catch (error) {
-      console.error('Wishlist toggle error:', error);
+    } catch (error) { 
       toast.error('Failed to update wishlist. Please try again.');
     }
   };

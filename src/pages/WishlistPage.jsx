@@ -98,8 +98,7 @@ const WishlistPage = () => {
         await handleRemoveFromWishlist(product);
       }
     } catch (err) {
-      console.log(err.response?.data?.message || err.message);
-      toast.error(err.response?.data?.message || 'Failed to add product to cart');
+        toast.error(err.response?.data?.message || 'Failed to add product to cart');
     }
   };
 

@@ -224,10 +224,8 @@ const AdminDashboard = () => {
                     Authorization: `Bearer ${adminToken}`
                 }
             });
-            console.log(response.data);
             setAllOrders(response.data.orders);
         } catch (error) {
-            console.log(error);
         }
     };
 
@@ -253,7 +251,6 @@ const AdminDashboard = () => {
         return '/placeholder-image.jpg';
     };
 
-    console.log(orders);
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Notification Toast */}

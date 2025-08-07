@@ -36,7 +36,6 @@ const OrderHistoryPage = () => {
           }
         });
         
-        console.log("Orders fetched:", response.data);
         
         if (response.data.orders && response.data.orders.length > 0) {
           setOrders(response.data.orders);

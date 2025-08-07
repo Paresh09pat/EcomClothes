@@ -14,7 +14,6 @@ export const AuthProvider = ({ children }) => {
   const [isRemoved,setIsRemoved] = useState(false);
   const [cartItems,setCartitems] = useState(true)
   const [itemsCart,setItemsCart]=useState(0)
-  console.log("cart>>>",itemsCart)
 
   const token = localStorage.getItem('_token_ecommerce');
   const adminToken = sessionStorage.getItem('_token_ecommerce_admin');
@@ -73,7 +72,6 @@ export const AuthProvider = ({ children }) => {
       return response;
     }
     catch (err) {
-      console.error('Wishlist toggle error:', err);
       throw err;
     }
     finally {
@@ -100,7 +98,6 @@ export const AuthProvider = ({ children }) => {
       return response.data.products;
     }
     catch (err) {
-      console.error('Get wishlist error:', err);
       setWishlist([]);
       return [];
     }
@@ -134,8 +131,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       return response;
-    } catch (err) {
-      console.error('Profile update error:', err);
+    } catch (err) { 
       throw err;
     }
   };

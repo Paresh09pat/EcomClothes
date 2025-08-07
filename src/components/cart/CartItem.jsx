@@ -7,8 +7,6 @@ import Loader from '../Loader';
 
 const CartItem = ({ item }) => {
 
-  console.log("item", item)
-
   const {
     token,
     isRemoved,
@@ -43,8 +41,6 @@ const CartItem = ({ item }) => {
   };
 
   const productImage = getProductImage();
-  console.log("productImage", productImage)
-
 
   const handleQuantityChange = (newQuantity) => {
     updateCart(product._id, newQuantity);
@@ -63,7 +59,6 @@ const CartItem = ({ item }) => {
   };
 
   const removeFromCart = async (id) => {
-    console.log("id", id);
     try {
       setLoading(true);
       const res = await axios.delete(`${baseUrl}/v1/cart/remove/${id}`, {
@@ -74,10 +69,8 @@ const CartItem = ({ item }) => {
       setIsRemoved((prev) => !prev);
       setCartitems((prev=>!prev))
       
-      console.log(res);
     }
     catch (err) {
-      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -92,9 +85,7 @@ const CartItem = ({ item }) => {
         }
       });
       setIsRemoved((prev) => !prev);
-      console.log(res);
-    } catch (err) {
-      console.log(err);
+      } catch (err) {
     } finally {
       setLoading(false);
     }

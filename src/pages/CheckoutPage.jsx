@@ -22,12 +22,10 @@ const CheckoutPage = () => {
           Authorization: `Bearer ${token}`
         }
       });
-      console.log('Cart data from API:', res?.data?.cart);
-      setCart(res?.data?.cart || []);
+          setCart(res?.data?.cart || []);
       setTotal(res?.data?.totalAmount || 0);
       setIsLoading(false);
     } catch (err) {
-      console.log(err);
       toast.error('Failed to load cart data');
       setIsLoading(false);
     }
@@ -82,8 +80,6 @@ const CheckoutPage = () => {
         }
       });
 
-      console.log("orderReq", orderResponse.data.success)
-
 
       if (orderResponse?.data?.success) {
         const order = {
@@ -104,8 +100,7 @@ const CheckoutPage = () => {
         throw new Error('Failed to create order');
       }
     } catch (error) {
-      console.error('Error placing order:', error);
-
+        
       // Handle specific error cases
       if (error.response?.status === 400) {
         toast.error(error.response.data.message || 'Invalid order data');

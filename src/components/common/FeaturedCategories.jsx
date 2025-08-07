@@ -19,21 +19,21 @@ const categories = [
     color: 'from-pink-500 to-rose-600'
   },
   {
-    id: 'kids',
+    id: 'Kids',
     name: 'Kids',
     image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
     description: 'Comfortable and stylish clothes for children.',
     itemCount: '850+ Items',
     color: 'from-yellow-400 to-orange-500'
   },
-  {
-    id: 'accessories',
-    name: 'Accessories',
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
-    description: 'Complete your look with our accessories.',
-    itemCount: '950+ Items',
-    color: 'from-teal-400 to-emerald-500'
-  }
+  // {
+  //   id: 'accessories',
+  //   name: 'Accessories',
+  //   image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+  //   description: 'Complete your look with our accessories.',
+  //   itemCount: '950+ Items',
+  //   color: 'from-teal-400 to-emerald-500'
+  // }
 ];
 
 const FeaturedCategories = () => {
@@ -45,10 +45,7 @@ const FeaturedCategories = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Shop by Category</h2>
             <p className="mt-2 text-gray-600 max-w-2xl">Explore our wide range of products across different categories</p>
           </div>
-          <Link to="/categories" className="mt-4 md:mt-0 text-indigo-600 hover:text-indigo-800 font-medium flex items-center">
-            View All Categories
-            <ArrowRightIcon className="h-4 w-4 ml-1" />
-          </Link>
+         
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

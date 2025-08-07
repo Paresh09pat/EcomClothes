@@ -158,7 +158,6 @@ const ProductForm = () => {
                 setImagePreview(newImages);
             }
             
-            console.log('Added image URL:', trimmedLink);
         }
     };
 
@@ -227,7 +226,6 @@ const ProductForm = () => {
                 });
 
                 headers['Content-Type'] = 'multipart/form-data';
-                console.log('Sending NEW FILE UPLOADS - Replace existing images');
                 
             } else {
                 // Use JSON - either for URLs or no images
@@ -246,24 +244,17 @@ const ProductForm = () => {
                     if (isEditMode) {
                         dataToSend.replaceImages = true;
                     }
-                    console.log('Sending IMAGE URLS - Replace existing images:', formData.images);
                 } else if (isEditMode && imageUploadMethod === "file" && imageFiles.length === 0) {
                     // User selected file method but didn't upload files - keep existing
                     dataToSend.keepExistingImages = true;
-                    console.log('EDIT MODE: Keeping existing images (no changes)');
                 } else if (isEditMode) {
                     // User wants to clear images
                     dataToSend.clearImages = true;
-                    console.log('EDIT MODE: Clearing all images');
                 } else {
-                    console.log('CREATE MODE: No images provided');
                 }
 
                 headers['Content-Type'] = 'application/json';
             }
-
-            console.log('Sending data:', dataToSend);
-            console.log('Headers:', headers);
 
             if (isEditMode) {
                 // Update existing product
@@ -293,10 +284,7 @@ const ProductForm = () => {
                 setImagePreview([]);
                 setImageUploadMethod("file");
             }
-        } catch (err) {
-            console.error("Full error:", err);
-            console.error("Error response:", err?.response?.data);
-
+        } catch (err) {     
             // Handle session expiry
             if (err?.response?.status === 401) {
                 toast.error("Admin session expired. Please login again.");
@@ -328,7 +316,7 @@ const ProductForm = () => {
                 </div>
             </div>
         );
-    }
+    }   
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
