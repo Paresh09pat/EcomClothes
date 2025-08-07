@@ -45,32 +45,19 @@ const ProfilePage = () => {
       try {
         setLoading(true);
         
-        // Fetch user profile
+        // Fetch user profile with stats (single API call)
         const profileResponse = await axios.get(`${baseUrl}/v1/user/profile`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
-        // Fetch user orders for stats
-        const ordersResponse = await axios.get(`${baseUrl}/v1/orders`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        // Fetch wishlist for stats
-        const wishlistResponse = await axios.get(`${baseUrl}/v1/wishlist/get`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        setProfileData(profileResponse.data.user);
+        const { user: userData, wishlist, orders } = profileResponse.data;
+        setProfileData(userData);
         setStats({
-          totalOrders: ordersResponse.data.orders?.length || 0,
-          wishlistItems: wishlistResponse.data.products?.length || 0,
-          memberSince: profileResponse.data.user?.createdAt || new Date().toISOString()
+          totalOrders: orders || 0,
+          wishlistItems: wishlist || 0,
+          memberSince: userData?.createdAt || user?.createdAt || null
         });
 
       } catch (error) {
@@ -87,11 +74,16 @@ const ProfilePage = () => {
   // Format date
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'N/A';
+    }
   };
 
   // Get user initials for avatar
@@ -226,13 +218,11 @@ const ProfilePage = () => {
               <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-8 text-white">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="h-20 w-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl font-bold">
-                      {getUserInitials(profileData?.name || user?.name)}
-                    </div>
+                   
                   </div>
                   <div className="ml-6">
                     <h2 className="text-2xl font-bold">{profileData?.name || user?.name}</h2>
-                    <p className="text-indigo-100">Member since {formatDate(stats.memberSince)}</p>
+                    
                   </div>
                 </div>
               </div>
@@ -303,61 +293,55 @@ const ProfilePage = () => {
                   </div>
                   
                   <div className="space-y-4">
-                                         <div>
-                       <label className="block text-sm font-medium text-gray-500">Phone Number</label>
-                       {editingField === 'phone' ? (
-                         <div className="mt-1 flex items-center space-x-2">
-                           <PhoneIcon className="h-4 w-4 text-gray-400" />
-                           <input
-                             type="tel"
-                             value={editValue}
-                             onChange={(e) => setEditValue(e.target.value)}
-                             className="flex-1 text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                             placeholder="Enter phone number (10 digits)"
-                             maxLength="10"
-                           />
-                           <button
-                             onClick={handleSaveField}
-                             disabled={updating}
-                             className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
-                           >
-                             {updating ? (
-                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                             ) : (
-                               <CheckIcon className="h-4 w-4" />
-                             )}
-                           </button>
-                           <button
-                             onClick={handleCancelEdit}
-                             disabled={updating}
-                             className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
-                           >
-                             <XMarkIcon className="h-4 w-4" />
-                           </button>
-                         </div>
-                       ) : (
-                         <div className="mt-1 text-sm text-gray-900 flex items-center justify-between group">
-                           <div className="flex items-center">
-                             <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
-                             {profileData?.phone || 'Not provided'}
-                           </div>
-                           <button
-                             onClick={() => handleEditField('phone', profileData?.phone)}
-                             className="opacity-0 group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity"
-                           >
-                             <PencilIcon className="h-4 w-4" />
-                           </button>
-                         </div>
-                       )}
-                     </div>
-                    
                     <div>
-                      <label className="block text-sm font-medium text-gray-500">Account Created</label>
-                      <p className="mt-1 text-sm text-gray-900 flex items-center">
-                        <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
-                        {formatDate(stats.memberSince)}
-                      </p>
+                      <label className="block text-sm font-medium text-gray-500">Phone Number</label>
+                      {editingField === 'phone' ? (
+                        <div className="mt-1 flex items-center space-x-2">
+                          <PhoneIcon className="h-4 w-4 text-gray-400" />
+                          <input
+                            type="tel"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="flex-1 text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Enter phone number (10 digits)"
+                            maxLength="10"
+                          />
+                          <button
+                            onClick={handleSaveField}
+                            disabled={updating}
+                            className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                          >
+                            {updating ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                            ) : (
+                              <CheckIcon className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            disabled={updating}
+                            className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-1 text-sm text-gray-900 flex items-center justify-between group">
+                          <div className="flex items-center">
+                            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+                            {profileData?.phone || user?.phone || 'Not provided'}
+                          </div>
+                          <button
+                            onClick={() => handleEditField('phone', profileData?.phone || user?.phone)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
+                    
+                  
                   </div>
                 </div>
 
@@ -407,18 +391,7 @@ const ProfilePage = () => {
                   <span className="text-2xl font-bold text-pink-600">{stats.wishlistItems}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center">
-                    <ClockIcon className="h-5 w-5 text-green-600 mr-3" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Member Since</p>
-                      <p className="text-xs text-gray-500">Account age</p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">
-                    {formatDate(stats.memberSince)}
-                  </span>
-                </div>
+              
               </div>
             </div>
 
@@ -454,27 +427,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Account Security */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Security</h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center">
-                    <ShieldCheckIcon className="h-5 w-5 text-green-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900">Email Verified</span>
-                  </div>
-                  <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center">
-                    <ShieldCheckIcon className="h-5 w-5 text-blue-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900">Password Protected</span>
-                  </div>
-                  <CheckCircleIcon className="h-4 w-4 text-blue-600" />
-                </div>
-              </div>
-            </div>
+          
           </div>
         </div>
 

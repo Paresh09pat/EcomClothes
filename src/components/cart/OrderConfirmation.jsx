@@ -38,6 +38,17 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
   const deliveryDate = new Date(orderDate);
   deliveryDate.setDate(deliveryDate.getDate() + 5);
 
+  // Helper function to normalize status for comparison
+  const normalizeStatus = (status) => {
+    return status?.toLowerCase().replace(/\s+/g, ' ');
+  };
+
+  // Helper function to check if status matches any of the given statuses
+  const isStatusIn = (currentStatus, statusArray) => {
+    const normalized = normalizeStatus(currentStatus);
+    return statusArray.some(status => normalizeStatus(status) === normalized);
+  };
+
   // Function to get product image with proper fallback
   const getProductImage = (item) => {
     if (item.product) {
@@ -58,7 +69,8 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
 
   // Function to get status color and icon
   const getStatusInfo = (status) => {
-    switch (status?.toLowerCase()) {
+    const normalizedStatus = normalizeStatus(status);
+    switch (normalizedStatus) {
       case 'pending':
         return {
           color: 'bg-yellow-500',
@@ -86,6 +98,7 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
           label: 'Shipped',
           description: 'Your order has been shipped'
         };
+      case 'out for delivery':
       case 'out of delivery':
         return {
           color: 'bg-purple-500',
@@ -144,8 +157,7 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
 
     try {
       setCancelling(true);
-      console.log("TOKEN>>", token)
-      const response = await axios.put(
+        const response = await axios.put(
         `${baseUrl}/v1/orders/${order._id}/cancel`,
         {},
         {
@@ -300,21 +312,21 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
 
             {/* Processing */}
             <div className="relative flex items-start mb-6">
-              <div className={`h-7 w-7 rounded-full ${['processing', 'shipped', 'out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+              <div className={`h-7 w-7 rounded-full ${isStatusIn(order.status, ['processing', 'shipped', 'out for delivery', 'out of delivery', 'delivered'])
                   ? 'bg-blue-500'
                   : 'bg-gray-300'
                 } flex items-center justify-center z-10`}>
                 <ClockIcon className="h-4 w-4 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className={`text-base font-medium ${['processing', 'shipped', 'out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+                <h3 className={`text-base font-medium ${isStatusIn(order.status, ['processing', 'shipped', 'out for delivery', 'out of delivery', 'delivered'])
                     ? 'text-gray-900'
                     : 'text-gray-500'
                   }`}>
                   Processing
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {['processing', 'shipped', 'out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+                  {isStatusIn(order.status, ['processing', 'shipped', 'out for delivery', 'out of delivery', 'delivered'])
                     ? 'Your order is currently being processed'
                     : 'Your order will be processed soon'}
                 </p>
@@ -323,21 +335,21 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
 
             {/* Shipped */}
             <div className="relative flex items-start mb-6">
-              <div className={`h-7 w-7 rounded-full ${['shipped', 'out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+              <div className={`h-7 w-7 rounded-full ${isStatusIn(order.status, ['shipped', 'out for delivery', 'out of delivery', 'delivered'])
                   ? 'bg-indigo-500'
                   : 'bg-gray-300'
                 } flex items-center justify-center z-10`}>
                 <TruckIcon className="h-4 w-4 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className={`text-base font-medium ${['shipped', 'out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+                <h3 className={`text-base font-medium ${isStatusIn(order.status, ['shipped', 'out for delivery', 'out of delivery', 'delivered'])
                     ? 'text-gray-900'
                     : 'text-gray-500'
                   }`}>
                   Shipped
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {['shipped', 'out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+                  {isStatusIn(order.status, ['shipped', 'out for delivery', 'out of delivery', 'delivered'])
                     ? 'Your order has been shipped'
                     : 'Your order will be shipped soon'}
                 </p>
@@ -346,21 +358,21 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
 
             {/* Out for Delivery */}
             <div className="relative flex items-start mb-6">
-              <div className={`h-7 w-7 rounded-full ${['out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+              <div className={`h-7 w-7 rounded-full ${isStatusIn(order.status, ['out for delivery', 'out of delivery', 'delivered'])
                   ? 'bg-purple-500'
                   : 'bg-gray-300'
                 } flex items-center justify-center z-10`}>
                 <TruckIcon className="h-4 w-4 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className={`text-base font-medium ${['out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+                <h3 className={`text-base font-medium ${isStatusIn(order.status, ['out for delivery', 'out of delivery', 'delivered'])
                     ? 'text-gray-900'
                     : 'text-gray-500'
                   }`}>
                   Out for Delivery
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {['out of delivery', 'delivered'].includes(order.status?.toLowerCase())
+                  {isStatusIn(order.status, ['out for delivery', 'out of delivery', 'delivered'])
                     ? 'Your order is out for delivery'
                     : 'Your order will be out for delivery soon'}
                 </p>

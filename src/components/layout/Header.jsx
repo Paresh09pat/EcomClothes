@@ -62,22 +62,7 @@ const Header = () => {
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="bg-indigo-600 text-white py-2 text-sm hidden md:block">
-        <div className="container flex justify-between items-center">
-          <div className="flex items-center">
-            {/* <PhoneIcon className="h-4 w-4 mr-1" /> */}
-            {/* <span>+1 (555) 123-4567</span>
-            <span className="mx-3">|</span>
-            <span>Free shipping on orders over ₹5,000</span> */}
-          </div>
-          <div className="flex space-x-4">
-            <Link to="#" className="hover:text-indigo-200 transition-colors">Track Order</Link>
-            <Link to="#" className="hover:text-indigo-200 transition-colors">Help</Link>
-          </div>
-        </div>
-      </div>
-
+  
       {/* Main Header */}
       <header className={`bg-white sticky top-0 z-50 ${scrolled ? 'shadow-md' : ''} transition-shadow duration-300`}>
         <div className="container py-4">
@@ -117,13 +102,7 @@ const Header = () => {
             {/* User, Wishlist, Search and Cart */}
             <div className="flex items-center space-x-5">
               {/* Search */}
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="text-gray-700 hover:text-indigo-600 transition-colors hidden md:block"
-                aria-label="Search"
-              >
-                <MagnifyingGlassIcon className="h-6 w-6" />
-              </button>
+            
 
               {/* Wishlist */}
               <Link
@@ -186,31 +165,12 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Search Bar - Conditional */}
-          {searchOpen && (
-            <div className="mt-4 relative">
-              <input
-                type="text"
-                placeholder="Search for products..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-600">
-                <MagnifyingGlassIcon className="h-5 w-5" />
-              </button>
-            </div>
-          )}
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
             <nav className="mt-4 py-4 border-t border-gray-200 lg:hidden">
               <div className="flex justify-between mb-4">
-                <button
-                  onClick={() => setSearchOpen(!searchOpen)}
-                  className="text-gray-700 hover:text-indigo-600 flex items-center"
-                >
-                  <MagnifyingGlassIcon className="h-5 w-5 mr-1" />
-                  <span>Search</span>
-                </button>
+               
                 <Link to="/wishlist" className="text-gray-700 hover:text-indigo-600 flex items-center">
                   <HeartIcon className="h-5 w-5 mr-1" />
                   <span>Wishlist</span>
