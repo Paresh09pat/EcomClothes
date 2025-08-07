@@ -23,18 +23,19 @@ const AdminLogin = () => {
 
         try {
             const res = await axios.post(`${baseUrl}/admin/login`, { email, password });
-            adminlogin(res?.data);
-
-            if (res.status === 200) {
+            
+            if (res.status === 200 && res.data) {
+                adminlogin(res.data);
                 navigate('/product-form');
             }
         } catch (err) {
-            setError(err?.response?.data?.message);
-            console.error(err?.response?.data?.message);
-            toast.error(err?.response?.data?.message);
+            const errorMessage = err.response?.data?.message || 'Admin login failed. Please try again.';
+            setError(errorMessage);
+            console.error('Admin login error:', errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
         }
-
-        setLoading(false);
     };
 
     useEffect(() => {

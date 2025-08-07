@@ -21,19 +21,19 @@ const LoginPage = () => {
 
     try {
       const res = await axios.post(`${baseUrl}/v1/auth/login`, { email, password });
-      login(res?.data);
-
-
-      if (res.status === 200) {
+      
+      if (res.status === 200 && res.data) {
+        login(res.data);
         navigate('/');
       }
     } catch (err) {
-      setError(err.response.data.message);
-      console.error(err.response.data.message);
-      toast.error(err.response.data.message);
+      const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      console.error('Login error:', errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
 

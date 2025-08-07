@@ -134,11 +134,11 @@ const OrderConfirmation = ({ order }) => {
               <div key={item._id} className="flex items-center p-4 hover:bg-gray-50">
                 <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                   <img
-                    src={item.product.images && item.product.images.length > 0 
+                    src={item.product && item.product.images && item.product.images.length > 0 
                       ? item.product.images[0]
                       : '/placeholder-image.jpg'
                     }
-                    alt={item.product.name}
+                    alt={item.product ? item.product.name : 'Product'}
                     className="h-full w-full object-cover object-center"
                     onError={(e) => {
                       e.target.src = '/placeholder-image.jpg';
@@ -146,10 +146,10 @@ const OrderConfirmation = ({ order }) => {
                   />
                 </div>
                 <div className="ml-4 flex-1">
-                  <h3 className="text-sm font-medium text-gray-900">{item.product.name}</h3>
+                  <h3 className="text-sm font-medium text-gray-900">{item.product ? item.product.name : 'Product Name Not Available'}</h3>
                   <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
-                  <p className="text-xs text-gray-500">Category: {item.product.category}</p>
-                  {item.product.description && (
+                  <p className="text-xs text-gray-500">Category: {item.product ? item.product.category : 'N/A'}</p>
+                  {item.product && item.product.description && (
                     <p className="text-xs text-gray-400 mt-1 truncate max-w-xs">
                       {item.product.description.length > 50 
                         ? `${item.product.description.substring(0, 50)}...` 
@@ -159,7 +159,7 @@ const OrderConfirmation = ({ order }) => {
                   )}
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">₹{(item.product.price * item.quantity).toLocaleString()}</p>
+                  <p className="text-sm font-medium text-gray-900">₹{((item.product ? item.product.price : 0) * item.quantity).toLocaleString()}</p>
                   <p className="text-xs text-green-600 mt-1">Delivery by {deliveryDate.toLocaleDateString()}</p>
                 </div>
               </div>

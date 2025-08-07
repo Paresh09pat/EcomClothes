@@ -211,11 +211,11 @@ const OrderHistoryPage = () => {
                         <div key={item._id} className="flex flex-col sm:flex-row items-start sm:items-center py-2 border-b border-gray-100 last:border-0">
                           <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                             <img 
-                              src={item.product.images  && item.product.images.length > 0 
+                              src={item.product && item.product.images && item.product.images.length > 0 
                                 ? item.product.images[0]
                                 : '/placeholder-image.jpg'
                               } 
-                              alt={item.product.name} 
+                              alt={item.product ? item.product.name : 'Product'} 
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.target.src = '/placeholder-image.jpg';
@@ -223,10 +223,10 @@ const OrderHistoryPage = () => {
                             />
                           </div>
                           <div className="flex-1 ml-0 sm:ml-4 mt-2 sm:mt-0">
-                            <h3 className="font-medium text-gray-900">{item.product.name}</h3>
+                            <h3 className="font-medium text-gray-900">{item.product ? item.product.name : 'Product Name Not Available'}</h3>
                             <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
-                            <p className="text-sm text-gray-500">Category: {item.product.category}</p>
-                            {item.product.description && (
+                            <p className="text-sm text-gray-500">Category: {item.product ? item.product.category : 'N/A'}</p>
+                            {item.product && item.product.description && (
                               <p className="text-xs text-gray-400 mt-1 truncate max-w-xs">
                                 {item.product.description.length > 40 
                                   ? `${item.product.description.substring(0, 40)}...` 
@@ -236,7 +236,7 @@ const OrderHistoryPage = () => {
                             )}
                           </div>
                           <div className="mt-2 sm:mt-0">
-                            <p className="font-medium">₹{(item.product.price * item.quantity).toLocaleString()}</p>
+                            <p className="font-medium">₹{((item.product ? item.product.price : 0) * item.quantity).toLocaleString()}</p>
                           </div>
                         </div>
                       ))}
