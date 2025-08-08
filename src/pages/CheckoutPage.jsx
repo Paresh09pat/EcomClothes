@@ -13,7 +13,7 @@ const CheckoutPage = () => {
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [selectedSize, setSelectedSize] = useState(null);
   // Fetch cart data from API
   const getCart = async () => {
     try {
@@ -22,7 +22,7 @@ const CheckoutPage = () => {
           Authorization: `Bearer ${token}`
         }
       });
-          setCart(res?.data?.cart || []);
+      setCart(res?.data?.cart || []);
       setTotal(res?.data?.totalAmount || 0);
       setIsLoading(false);
     } catch (err) {
@@ -37,6 +37,7 @@ const CheckoutPage = () => {
     }
   }, [token]);
 
+  console.log("selectedSize", selectedSize);
   useEffect(() => {
     if (!isLoading && cart.length === 0) {
       toast.info('Cart is empty');
@@ -51,12 +52,15 @@ const CheckoutPage = () => {
     try {
       // Prepare order data
       const orderData = {
-        items: cart.map(item => ({
-          productId: item.product._id || item._id,
-          quantity: item.quantity,
-          size: item.selectedSize || item.size,
-          price: item.product?.price || item.price
-        })),
+        items: cart.map(item => {
+
+          return ({
+            productId: item.product._id || item._id,
+            quantity: item.quantity,
+            size: item.selectedSize || item.size,
+            price: item.product?.price || item.price
+          })
+        }),
         totalAmount: total,
         shippingAddress: {
           firstName: formData.firstName,
@@ -67,10 +71,13 @@ const CheckoutPage = () => {
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
-          addressType: formData.addressType
+          addressType: formData.addressType,
         },
+        selectedSize: cart.map(item => item.selectedSize || item.size).join(', '),
         paymentMethod: formData.paymentMethod
       };
+
+
 
       // Create order via API
       const orderResponse = await axios.post(`${baseUrl}/v1/orders/create`, orderData, {
@@ -100,7 +107,7 @@ const CheckoutPage = () => {
         throw new Error('Failed to create order');
       }
     } catch (error) {
-        
+
       // Handle specific error cases
       if (error.response?.status === 400) {
         toast.error(error.response.data.message || 'Invalid order data');
@@ -161,6 +168,7 @@ const CheckoutPage = () => {
                 {cart.map(item => {
                   // Get the correct size property
                   const selectedSize = item.selectedSize || item.size;
+
 
                   return (
                     <li key={`${item._id || item.product._id}-${selectedSize || 'no-size'}`} className="py-4 flex">

@@ -610,6 +610,7 @@ const AdminDashboard = () => {
                                                         <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
                                                         <p className="text-xs sm:text-sm text-gray-600">Category: {item.product.category}</p>
                                                         <p className="text-xs sm:text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                                        <p className="text-xs sm:text-sm text-gray-600">Size: {selectedOrder.selectedSize || 'N/A'}</p>
                                                     </div>
                                                 </div>
                                                 <p className="font-medium text-sm sm:text-base ml-2">{formatCurrency(item.product.price)}</p>

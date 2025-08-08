@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
-import { baseUrl } from '../utils/constant';
-import { 
-  ShoppingBagIcon, 
-  TruckIcon, 
-  CalendarIcon, 
+import {
+  ArrowLeftIcon,
   ArrowPathIcon,
   ChevronRightIcon,
-  ArrowLeftIcon
+  ShoppingBagIcon,
+  TruckIcon
 } from '@heroicons/react/24/outline';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { baseUrl } from '../utils/constant';
 
 const OrderHistoryPage = () => {
   const { user, token } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
   
   useEffect(() => {
     const fetchOrders = async () => {
@@ -39,6 +39,7 @@ const OrderHistoryPage = () => {
         
         if (response.data.orders && response.data.orders.length > 0) {
           setOrders(response.data.orders);
+          
         } else {
           setOrders([]);
         }
@@ -53,6 +54,8 @@ const OrderHistoryPage = () => {
     
     fetchOrders();
   }, [token]);
+
+  
   
   // Function to check if an order is within the return period (7 days)
   const isWithinReturnPeriod = (orderDate) => {
@@ -85,6 +88,8 @@ const OrderHistoryPage = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  
 
   // Function to handle return order
   const handleReturnOrder = (orderId) => {
@@ -239,6 +244,7 @@ const OrderHistoryPage = () => {
                           <div className="flex-1 ml-0 sm:ml-4 mt-2 sm:mt-0">
                             <h3 className="font-medium text-gray-900">{item.product ? item.product.name : 'Product Name Not Available'}</h3>
                             <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
+                            <p className="text-sm text-gray-500">Size: {order.selectedSize || 'N/A'}</p>
                             <p className="text-sm text-gray-500">Category: {item.product ? item.product.category : 'N/A'}</p>
                             {item.product && item.product.description && (
                               <p className="text-xs text-gray-400 mt-1 truncate max-w-xs">
