@@ -175,7 +175,7 @@ const WishlistPage = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-sm">
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {wishlist.map((item) => {
                   // Handle images with proper fallback for both images and imageUrls arrays
                   let image;

@@ -146,13 +146,12 @@ const ProductCard = ({ product }) => {
             )}
           </button>
 
-          <div className="h-64 overflow-hidden rounded-t-lg bg-gray-100">
+          <div className="h-48 sm:h-64 overflow-hidden rounded-t-lg bg-gray-100">
             {image && image.length > 0 ? (
               <img
                 src={image[0]} // Show only the first image
                 alt={product.name}
                 className="h-full w-full object-cover object-center transform transition-all duration-700 ease-in-out group-hover:scale-105"
-                style={{ height: '256px' }} /* Fixed height for consistency */
                 onError={(e) => {
                   e.target.src = '/placeholder-image.jpg';
                 }}
@@ -172,34 +171,34 @@ const ProductCard = ({ product }) => {
       </Link>
 
       {/* Product Info - Flexible content area */}
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col">
         <div className="flex items-center mb-1">
           <div className="flex text-yellow-400">
-            <StarIconSolid className="h-4 w-4" />
-            <StarIconSolid className="h-4 w-4" />
-            <StarIconSolid className="h-4 w-4" />
-            <StarIconSolid className="h-4 w-4" />
-            <StarIcon className="h-4 w-4" />
+            <StarIconSolid className="h-3 w-3 sm:h-4 sm:w-4" />
+            <StarIconSolid className="h-3 w-3 sm:h-4 sm:w-4" />
+            <StarIconSolid className="h-3 w-3 sm:h-4 sm:w-4" />
+            <StarIconSolid className="h-3 w-3 sm:h-4 sm:w-4" />
+            <StarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
           </div>
           <span className="text-xs text-gray-500 ml-1">(4.0)</span>
         </div>
 
         <Link to={`/products/${product._id}`} className="block flex-1">
-          <h3 className="text-sm font-medium text-gray-700 line-clamp-2 hover:text-indigo-600 transition-colors">{product.name}</h3>
+          <h3 className="text-xs sm:text-sm font-medium text-gray-700 line-clamp-2 hover:text-indigo-600 transition-colors">{product.name}</h3>
           <p className="mt-1 text-xs text-gray-500 capitalize">{product.category}</p>
 
-          <div className="mt-2 flex items-center">
-            <span className="font-bold text-gray-900">₹{product.price.toFixed(2)}</span>
-            <span className="ml-2 text-sm text-gray-500 line-through">₹{originalPrice.toFixed(2)}</span>
+          <div className="mt-2 flex items-center flex-wrap">
+            <span className="font-bold text-gray-900 text-sm sm:text-base">₹{product.price.toFixed(2)}</span>
+            <span className="ml-2 text-xs sm:text-sm text-gray-500 line-through">₹{originalPrice.toFixed(2)}</span>
             <span className="ml-2 text-xs font-medium text-green-600">{discountPercentage}% off</span>
           </div>
         </Link>
 
         {/* Available Sizes - Fixed height section */}
-        <div className="mt-3" style={{ minHeight: availableSizes.length > 0 ? '80px' : '20px' }}>
+        <div className="mt-2 sm:mt-3" style={{ minHeight: availableSizes.length > 0 ? '60px' : '20px' }}>
           {availableSizes.length > 0 && (
             <>
-              <label className="block text-xs font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-medium text-gray-700 mb-1 sm:mb-2">
                 Available Sizes:
               </label>
               <div className="flex flex-wrap gap-1">
@@ -217,7 +216,7 @@ const ProductCard = ({ product }) => {
                       className="sr-only"
                     />
                     <span
-                      className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 text-xs font-medium border rounded transition-all ${selectedSize === size
+                      className={`inline-flex items-center justify-center min-w-[24px] sm:min-w-[28px] h-6 sm:h-7 px-1 sm:px-2 text-xs font-medium border rounded transition-all ${selectedSize === size
                         ? 'border-indigo-600 bg-indigo-600 text-white'
                         : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                         }`}
@@ -237,9 +236,9 @@ const ProductCard = ({ product }) => {
         {/* Button - Always at bottom */}
         <button
           onClick={(e) => handleAddToCart(e, product)}
-          className="mt-4 w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md flex items-center justify-center transition-colors"
+          className="mt-3 sm:mt-4 w-full py-2 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium rounded-md flex items-center justify-center transition-colors"
         >
-          <ShoppingBagIcon className="h-4 w-4 mr-2" />
+          <ShoppingBagIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
           Add to Cart
         </button>
       </div>
