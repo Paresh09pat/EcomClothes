@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ArrowUpIcon } from '@heroicons/react/24/outline';
 
 /**
- * ScrollToTop component that appears when user scrolls down
- * and allows them to quickly scroll back to the top of the page
+ * ScrollToTop component that:
+ * 1. Automatically scrolls to top when navigating between pages
+ * 2. Shows a scroll-to-top button when user scrolls down
  */
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { pathname } = useLocation();
+
+  // Automatically scroll to top when route changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [pathname]);
 
   // Show button when page is scrolled down
   useEffect(() => {

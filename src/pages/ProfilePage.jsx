@@ -275,7 +275,7 @@ const ProfilePage = () => {
                           </div>
                           <button
                             onClick={() => handleEditField('name', profileData?.name || user?.name)}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity"
+                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity"
                           >
                             <PencilIcon className="h-4 w-4" />
                           </button>
@@ -333,7 +333,7 @@ const ProfilePage = () => {
                           </div>
                           <button
                             onClick={() => handleEditField('phone', profileData?.phone || user?.phone)}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity"
+                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity"
                           >
                             <PencilIcon className="h-4 w-4" />
                           </button>

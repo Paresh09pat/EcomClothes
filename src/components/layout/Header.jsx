@@ -51,6 +51,20 @@ const Header = () => {
     setMobileMenuOpen(false);
   }, [location]);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
+
   const categories = [
     { name: 'Men', path: '/categories/Men' },
     { name: 'Women', path: '/categories/Women' },
@@ -85,19 +99,6 @@ const Header = () => {
                 </Link>
               ))}
             </nav>
-
-            {/* Mobile menu button */}
-            <button
-              className="lg:hidden text-gray-700 hover:text-indigo-600 focus:outline-none"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <XMarkIcon className="h-6 w-6" />
-              ) : (
-                <Bars3Icon className="h-6 w-6" />
-              )}
-            </button>
 
             {/* User, Wishlist, Search and Cart */}
             <div className="flex items-center space-x-5">
@@ -162,63 +163,157 @@ const Header = () => {
                   <span className="ml-1 hidden sm:inline font-medium">Login</span>
                 </Link>
               )}
+
+              {/* Mobile menu button - moved to the end */}
+              <button
+                className="lg:hidden text-gray-700 hover:text-indigo-600 focus:outline-none"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <XMarkIcon className="h-6 w-6" />
+                ) : (
+                  <Bars3Icon className="h-6 w-6" />
+                )}
+              </button>
             </div>
           </div>
 
 
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation - Full Screen Overlay */}
           {mobileMenuOpen && (
-            <nav className="mt-4 py-4 border-t border-gray-200 lg:hidden">
-              <div className="flex justify-between mb-4">
-               
-                <Link to="/wishlist" className="text-gray-700 hover:text-indigo-600 flex items-center">
-                  <HeartIcon className="h-5 w-5 mr-1" />
-                  <span>Wishlist</span>
-                </Link>
-              </div>
-
-              <ul className="space-y-3">
-                {categories.map((category) => (
-                  <li key={category.name}>
-                    <Link
-                      to={category.path}
-                      className="text-gray-700 hover:text-indigo-600 block font-medium py-1"
-                    >
-                      {category.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                {user ? (
-                  <div className="space-y-3">
-                    <Link to="/profile" className="block text-gray-700 hover:text-indigo-600">My Profile</Link>
-                    <Link to="/orders" className="block text-gray-700 hover:text-indigo-600">My Orders</Link>
-                    <Link to="/wishlist" className="block text-gray-700 hover:text-indigo-600">My Wishlist</Link>
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+              />
+              
+              {/* Mobile Menu */}
+              <nav className="fixed inset-0 top-0 left-0 w-full h-full bg-white z-50 lg:hidden overflow-y-auto">
+                <div className="flex flex-col h-full">
+                  {/* Header with close button */}
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
                     <button
-                      onClick={logout}
-                      className="block w-full text-left text-gray-700 hover:text-indigo-600 py-1"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-gray-700 hover:text-indigo-600 focus:outline-none"
+                      aria-label="Close menu"
                     >
-                      Logout
+                      <XMarkIcon className="h-6 w-6" />
                     </button>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    <Link to="/login" className="block text-gray-700 hover:text-indigo-600">Login</Link>
-                    <Link to="/register" className="block text-gray-700 hover:text-indigo-600">Register</Link>
+
+                  {/* Menu Content */}
+                  <div className="flex-1 p-4">
+                    <div className="flex justify-between mb-6">
+                      <Link 
+                        to="/wishlist" 
+                        className="text-gray-700 hover:text-indigo-600 flex items-center"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <HeartIcon className="h-5 w-5 mr-2" />
+                        <span>Wishlist</span>
+                      </Link>
+                    </div>
+
+                    {/* Categories */}
+                    <div className="mb-8">
+                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Categories</h3>
+                      <ul className="space-y-3">
+                        {categories.map((category) => (
+                          <li key={category.name}>
+                            <Link
+                              to={category.path}
+                              className="text-gray-700 hover:text-indigo-600 block font-medium py-2 text-lg"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              {category.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* User Section */}
+                    <div className="border-t border-gray-200 pt-6">
+                      {user ? (
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">My Account</h3>
+                          <Link 
+                            to="/profile" 
+                            className="block text-gray-700 hover:text-indigo-600 py-2 text-lg"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            My Profile
+                          </Link>
+                          <Link 
+                            to="/orders" 
+                            className="block text-gray-700 hover:text-indigo-600 py-2 text-lg"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            My Orders
+                          </Link>
+                          <Link 
+                            to="/wishlist" 
+                            className="block text-gray-700 hover:text-indigo-600 py-2 text-lg"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            My Wishlist
+                          </Link>
+                          <button
+                            onClick={() => {
+                              logout();
+                              setMobileMenuOpen(false);
+                            }}
+                            className="block w-full text-left text-gray-700 hover:text-indigo-600 py-2 text-lg"
+                          >
+                            Logout
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Account</h3>
+                          <Link 
+                            to="/login" 
+                            className="block text-gray-700 hover:text-indigo-600 py-2 text-lg"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Login
+                          </Link>
+                          <Link 
+                            to="/register" 
+                            className="block text-gray-700 hover:text-indigo-600 py-2 text-lg"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Register
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Help Section */}
+                    <div className="border-t border-gray-200 pt-6 mt-6">
+                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Support</h3>
+                      <Link 
+                        to="/help" 
+                        className="block text-gray-700 hover:text-indigo-600 py-2 text-lg"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Help Center
+                      </Link>
+                      <Link 
+                        to="/contact" 
+                        className="block text-gray-700 hover:text-indigo-600 py-2 text-lg"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Contact Us
+                      </Link>
+                    </div>
                   </div>
-                )}
-                <div className="mt-4">
-                  <Link to="/help" className="block text-gray-700 hover:text-indigo-600 mb-3">
-                    Help Center
-                  </Link>
-                  <Link to="/contact" className="block text-gray-700 hover:text-indigo-600">
-                    Contact Us
-                  </Link>
                 </div>
-              </div>
-            </nav>
+              </nav>
+            </>
           )}
         </div>
       </header>
