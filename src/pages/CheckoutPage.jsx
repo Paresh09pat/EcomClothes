@@ -37,7 +37,6 @@ const CheckoutPage = () => {
     }
   }, [token]);
 
-  console.log("selectedSize", selectedSize);
   useEffect(() => {
     if (!isLoading && cart.length === 0) {
       toast.info('Cart is empty');
