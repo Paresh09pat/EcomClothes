@@ -71,7 +71,7 @@ const Hero = () => {
           {/* Left Column - Text Content */}
           <div className="text-white max-w-xl">
             <div className="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-              <p className="text-sm font-medium">New Summer Collection 2023</p>
+              <p className="text-sm font-medium">New Collection 2025</p>
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight animate-fade-in-up">
