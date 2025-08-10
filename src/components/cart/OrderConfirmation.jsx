@@ -8,7 +8,8 @@ import {
   ShoppingBagIcon,
   ArrowRightIcon,
   XCircleIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import { CheckBadgeIcon } from '@heroicons/react/24/solid';
 import axios from 'axios';
@@ -176,7 +177,10 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
         }
 
         toast.success('Order cancelled successfully!');
-        getOrders();
+        // Refresh the order data with the current order ID
+        if (getOrders && order._id) {
+          getOrders(order._id);
+        }
       } else {
         toast.error(response.data.message || 'Failed to cancel order');
       }
@@ -204,6 +208,22 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100">
+      {/* Back button */}
+      <div className="p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <Link 
+            to="/orders" 
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
+          >
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            Back to Orders
+          </Link>
+          <div className="text-sm text-gray-500">
+            Order #{order._id.slice(-8).toUpperCase()}
+          </div>
+        </div>
+      </div>
+      
       {/* Top banner - different colors based on status */}
       <div className={`${order.status?.toLowerCase() === 'cancelled'
           ? 'bg-gradient-to-r from-red-500 to-red-600'

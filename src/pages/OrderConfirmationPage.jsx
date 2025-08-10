@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import OrderConfirmation from '../components/cart/OrderConfirmation';
 import axios from 'axios';
 import { baseUrl } from '../utils/constant';
@@ -11,8 +11,84 @@ const OrderConfirmationPage = () => {
   const [error, setError] = useState(null);
   const { token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const orderId = location.state?.orderId;
 
-  const getOrders = async () => {
+  const getOrder = async (id) => {
+    try {
+      setLoading(true);
+      
+      // First try to get the specific order
+      try {
+        const response = await axios.get(`${baseUrl}/v1/orders/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.data.success && response.data.order) {
+          setOrder(response.data.order);
+          return;
+        }
+      } catch (specificOrderError) {
+        console.log('Specific order endpoint not available, falling back to all orders');
+      }
+      
+      // Fallback: fetch all orders and find the specific one
+      const response = await axios.get(`${baseUrl}/v1/orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data.orders && response.data.orders.length > 0) {
+        const foundOrder = response.data.orders.find(o => o._id === id);
+        if (foundOrder) {
+          setOrder(foundOrder);
+        } else {
+          setError('Order not found');
+          setTimeout(() => navigate('/orders'), 2000);
+        }
+      } else {
+        setError('No orders found');
+        setTimeout(() => navigate('/orders'), 2000);
+      }
+    } catch (err) {
+      console.error('Error fetching order:', err);
+      setError('Failed to load order details');
+      setTimeout(() => navigate('/orders'), 2000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle order updates (e.g., when order is cancelled)
+  const handleOrderUpdate = (updatedOrder) => {
+    setOrder(updatedOrder);
+    // Refresh the order data
+    if (orderId) {
+      getOrder(orderId);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      if (orderId) {
+        // Fetch specific order by ID
+        getOrder(orderId);
+      } else {
+        // Fallback: fetch latest order if no orderId provided
+        getLatestOrder();
+      }
+    } else {
+      navigate('/login');
+    }
+  }, [token, navigate, orderId]);
+
+  // Fallback function to get latest order
+  const getLatestOrder = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${baseUrl}/v1/orders`, {
@@ -37,19 +113,6 @@ const OrderConfirmationPage = () => {
       setLoading(false);
     }
   };
-
-  const handleOrderUpdate = (updatedOrder) => {
-    setOrder(updatedOrder);
-    getOrders();
-  };
-
-  useEffect(() => {
-    if (token) {
-      getOrders();
-    } else {
-      navigate('/login');
-    }
-  }, [token, navigate]);
 
   if (loading) {
     return (
@@ -85,7 +148,7 @@ const OrderConfirmationPage = () => {
   return (
     <div className="container py-12">
       <div className="max-w-3xl mx-auto">
-        <OrderConfirmation order={order} onOrderUpdate={handleOrderUpdate} getOrders={getOrders} />
+        <OrderConfirmation order={order} onOrderUpdate={handleOrderUpdate} getOrders={getOrder} />
       </div>
     </div>
   );
