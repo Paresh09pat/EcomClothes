@@ -16,7 +16,7 @@ const ProductManagement = () => {
 
     // Pagination configuration
     const ITEMS_PER_PAGE = 10;
-
+    
     const [products, setProducts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [inputValue, setInputValue] = useState('');
@@ -28,23 +28,27 @@ const ProductManagement = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [paginationLoading, setPaginationLoading] = useState(false);
+    const [filterLoading, setFilterLoading] = useState(false);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
     const [lastRefresh, setLastRefresh] = useState(null);
 
     const { adminToken } = useAuth();
 
-    // Pagination helper functions
-    const getPaginatedData = (data, page, itemsPerPage = ITEMS_PER_PAGE) => {
-        if (!Array.isArray(data) || data.length === 0) return [];
-        const startIndex = (page - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        return data.slice(startIndex, endIndex);
-    };
+    console.log("totalPages",totalPages);
 
-    const getTotalPages = (totalItems, itemsPerPage = ITEMS_PER_PAGE) => {
-        if (totalItems <= 0) return 1;
-        return Math.ceil(totalItems / itemsPerPage);
-    };
+    // Remove client-side pagination helper functions since we're using server-side pagination
+    // const getPaginatedData = (data, page, itemsPerPage = ITEMS_PER_PAGE) => {
+    //     if (!Array.isArray(data) || data.length === 0) return [];
+    //     const startIndex = (page - 1) * itemsPerPage;
+    //     const endIndex = startIndex + itemsPerPage;
+    //     return data.slice(startIndex, endIndex);
+    // };
+
+    // const getTotalPages = (totalItems, itemsPerPage = ITEMS_PER_PAGE) => {
+    //     if (totalItems <= 0) return 1;
+    //     return Math.ceil(totalItems / itemsPerPage);
+    // };
 
     const getPageInfo = (currentPage, totalItems, itemsPerPage = ITEMS_PER_PAGE) => {
         if (totalItems <= 0) return { startItem: 0, endItem: 0 };
@@ -53,9 +57,19 @@ const ProductManagement = () => {
         return { startItem, endItem };
     };
 
-    const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
+    const handlePageChange = async (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages && !paginationLoading) {
+            setPaginationLoading(true);
+            try {
+                setCurrentPage(newPage);
+                // Fetch new data for the selected page
+                await getAllProducts(false, newPage, ITEMS_PER_PAGE);
+            } catch (error) {
+                console.error('Error changing page:', error);
+                showNotification('Failed to load page', 'error');
+            } finally {
+                setPaginationLoading(false);
+            }
         }
     };
 
@@ -92,12 +106,27 @@ const ProductManagement = () => {
 
     // Debounced search
     const debouncedSearch = useCallback(
-        debounce((value) => {
+        debounce(async (value) => {
             setSearchTerm(value);
             setCurrentPage(1);
+            setFilterLoading(true);
+            try {
+                await getAllProducts(false, 1, ITEMS_PER_PAGE);
+            } finally {
+                setFilterLoading(false);
+            }
         }, 500),
-        []
+        [searchTerm, categoryFilter]
     );
+
+    // Handle search and category filter changes
+    useEffect(() => {
+        if (adminToken) {
+            setFilterLoading(true);
+            getAllProducts(false, 1, ITEMS_PER_PAGE)
+                .finally(() => setFilterLoading(false));
+        }
+    }, [searchTerm, categoryFilter]);
 
     const handleInputChange = (e) => {
         const value = e.target.value;
@@ -106,7 +135,7 @@ const ProductManagement = () => {
     };
 
         // Get all products
-        const getAllProducts = async (forceRefresh = false) => {
+        const getAllProducts = async (forceRefresh = false, page = currentPage, limit = ITEMS_PER_PAGE) => {
             try {
             setLoading(true);
             
@@ -115,22 +144,37 @@ const ProductManagement = () => {
                 window.allProductsCache = null;
             }
             
-                const response = await axios.get(`${baseUrl}/admin/get-all-products`, {
+            // Build query parameters
+            const params = {
+                page: page,
+                limit: limit
+            };
+            
+            // Only add search parameter if it has a value
+            if (searchTerm && searchTerm.trim()) {
+                params.search = searchTerm.trim();
+            }
+            
+            // Only add category parameter if it's not 'all'
+            if (categoryFilter && categoryFilter !== 'all') {
+                params.category = categoryFilter;
+            }
+            
+            const response = await axios.get(`${baseUrl}/admin/get-all-products`, {
                 headers: {
                     Authorization: `Bearer ${adminToken}`
-                }
+                },
+                params: params
             });
 
+            console.log("API Response:", response.data);   
+
             if (response.data.success) {
-                // Store all products for filtering
-                window.allProductsCache = response.data.products || [];
-                
-                // Set initial display (paginate the first 2 products)
-                const allProducts = response.data.products || [];
-                const firstPageProducts = getPaginatedData(allProducts, 1);
-                setProducts(firstPageProducts);
-                setTotalProducts(allProducts.length);
-                setTotalPages(getTotalPages(allProducts.length));
+                // Set products from API response
+                setProducts(response.data.products || []);
+                setTotalProducts(response.data.totalProducts || 0);
+                setTotalPages(response.data.totalPages || 1);
+                setCurrentPage(response.data.currentPage || 1);
                 
                 setLastRefresh(new Date());
                 
@@ -157,9 +201,10 @@ const ProductManagement = () => {
             });
 
             if (response.data.success) {
-                await getAllProducts(true); // Force refresh the list
-            setShowDeleteModal(false);
-            setSelectedProduct(null);
+                // Refresh the current page to show updated data
+                await getAllProducts(false, currentPage, ITEMS_PER_PAGE);
+                setShowDeleteModal(false);
+                setSelectedProduct(null);
                 showNotification('Product deleted successfully!', 'success');
             } else {
                 showNotification(response.data.message || 'Failed to delete product', 'error');
@@ -214,21 +259,26 @@ const ProductManagement = () => {
 
     // Get unique categories
     const getCategories = () => {
-        const allProducts = window.allProductsCache || products;
-        const categories = [...new Set(allProducts.map(product => product.category))];
+        const categories = [...new Set(products.map(product => product.category))];
         return categories;
     };
 
     // Handle category filter change
-    const handleCategoryFilter = (category) => {
+    const handleCategoryFilter = async (category) => {
         setCategoryFilter(category);
         setCurrentPage(1);
+        setFilterLoading(true);
+        try {
+            await getAllProducts(false, 1, ITEMS_PER_PAGE);
+        } finally {
+            setFilterLoading(false);
+        }
     };
 
     // Initial load
     useEffect(() => {
         if (adminToken) {
-            getAllProducts();
+            getAllProducts(false, 1, ITEMS_PER_PAGE);
         }
     }, [adminToken]);
 
@@ -236,13 +286,13 @@ const ProductManagement = () => {
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (!document.hidden && adminToken) {
-                getAllProducts(true); // Force refresh when returning
+                getAllProducts(true, currentPage, ITEMS_PER_PAGE); // Force refresh when returning, maintain current page
             }
         };
 
         const handleFocus = () => {
             if (adminToken) {
-                getAllProducts(true); // Force refresh when window gets focus
+                getAllProducts(true, currentPage, ITEMS_PER_PAGE); // Force refresh when window gets focus, maintain current page
             }
         };
 
@@ -253,44 +303,8 @@ const ProductManagement = () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('focus', handleFocus);
         };
-    }, [adminToken]);
+    }, [adminToken, currentPage]);
 
-    // Reset current page when filters change
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchTerm, categoryFilter]);
-
-    // Re-filter when search term, category filter, or page changes
-    useEffect(() => {
-        if (window.allProductsCache) {
-            // Use cached data for filtering
-            let filteredProducts = window.allProductsCache;
-            
-            // Client-side search filtering
-            if (searchTerm && searchTerm.trim()) {
-                const searchLower = searchTerm.toLowerCase().trim();
-                filteredProducts = filteredProducts.filter(product =>
-                    product.name.toLowerCase().includes(searchLower) ||
-                    product.description.toLowerCase().includes(searchLower) ||
-                    product.category.toLowerCase().includes(searchLower)
-                );
-            }
-            
-            // Client-side category filtering
-            if (categoryFilter && categoryFilter !== 'all') {
-                filteredProducts = filteredProducts.filter(product =>
-                    product.category === categoryFilter
-                );
-            }
-            
-            // Client-side pagination
-            const paginatedProducts = getPaginatedData(filteredProducts, currentPage);
-            
-            setProducts(paginatedProducts);
-            setTotalProducts(filteredProducts.length);
-            setTotalPages(getTotalPages(filteredProducts.length));
-        }
-    }, [searchTerm, categoryFilter, currentPage]);
 
         return (
         <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
@@ -354,8 +368,14 @@ const ProductManagement = () => {
                         </Link>
                         <button
                             onClick={async () => {
-                                await getAllProducts(true); // Force refresh
-                                showNotification('Products refreshed!', 'success');
+                                setCurrentPage(1);
+                                setLoading(true);
+                                try {
+                                    await getAllProducts(true, 1, ITEMS_PER_PAGE); // Force refresh and reset to page 1
+                                    showNotification('Products refreshed!', 'success');
+                                } finally {
+                                    setLoading(false);
+                                }
                             }}
                             disabled={loading}
                             className={`bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors flex items-center gap-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -426,24 +446,46 @@ const ProductManagement = () => {
                 </div>
 
                 {/* Search and Filters */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 relative">
+                    {/* Filter Loading Indicator */}
+                    {filterLoading && (
+                        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+                            <div className="flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                <span className="text-sm text-gray-600">Applying filters...</span>
+                            </div>
+                        </div>
+                    )}
+                    
                     <div className="flex flex-col lg:flex-row gap-4">
                         <div className="flex-1">
-                    <div className="relative">
+                            <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                        <input
-                            type="text"
+                                <input
+                                    type="text"
                                     placeholder="Search products by name, description, or category..."
                                     className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     value={inputValue}
                                     onChange={handleInputChange}
+                                    disabled={filterLoading}
                                 />
-                                {inputValue && (
+                                {filterLoading && (
+                                    <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                    </div>
+                                )}
+                                {inputValue && !filterLoading && (
                                     <button
-                                        onClick={() => {
+                                        onClick={async () => {
                                             setInputValue('');
                                             setSearchTerm('');
                                             setCurrentPage(1);
+                                            setFilterLoading(true);
+                                            try {
+                                                await getAllProducts(false, 1, ITEMS_PER_PAGE);
+                                            } finally {
+                                                setFilterLoading(false);
+                                            }
                                         }}
                                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                         title="Clear search"
@@ -459,14 +501,39 @@ const ProductManagement = () => {
                                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value={categoryFilter}
                                 onChange={(e) => handleCategoryFilter(e.target.value)}
+                                disabled={filterLoading}
                             >
                                 <option value="all">All Categories</option>
                                 {getCategories().map(category => (
                                     <option key={category} value={category}>{category}</option>
                                 ))}
                             </select>
+                            {filterLoading && (
+                                <div className="ml-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                </div>
+                            )}
                         </div>
                     </div>
+                    
+                    {/* Search Results Indicator */}
+                    {(searchTerm || categoryFilter !== 'all') && !filterLoading && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                                <div className="flex items-center gap-2">
+                                    <Search className="h-4 w-4" />
+                                    <span>
+                                        {searchTerm && `Searching for: "${searchTerm}"`}
+                                        {searchTerm && categoryFilter !== 'all' && ' and '}
+                                        {categoryFilter !== 'all' && `Category: ${categoryFilter}`}
+                                    </span>
+                                </div>
+                                <span className="font-medium">
+                                    Found {totalProducts} product{totalProducts !== 1 ? 's' : ''}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Products Table */}
@@ -587,18 +654,28 @@ const ProductManagement = () => {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 relative">
+                            {/* Pagination Loading Indicator */}
+                            {paginationLoading && (
+                                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                                    <div className="flex items-center gap-2">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                        <span className="text-sm text-gray-600">Loading...</span>
+                                    </div>
+                                </div>
+                            )}
+                            
                             <div className="flex-1 flex justify-between sm:hidden">
                                 <button
                                     onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                                    disabled={currentPage === 1}
+                                    disabled={currentPage === 1 || paginationLoading}
                                     className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Previous
                                 </button>
                                 <button
                                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                                    disabled={currentPage === totalPages}
+                                    disabled={currentPage === totalPages || paginationLoading}
                                     className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Next
@@ -623,7 +700,7 @@ const ProductManagement = () => {
                                     <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                                     <button
                                         onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                                        disabled={currentPage === 1}
+                                        disabled={currentPage === 1 || paginationLoading}
                                             className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Previous
@@ -634,11 +711,12 @@ const ProductManagement = () => {
                                             <button
                                                 key={page}
                                                 onClick={() => handlePageChange(page)}
-                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                                        currentPage === page
-                                                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                    }`}
+                                                disabled={paginationLoading}
+                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                                    currentPage === page
+                                                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                } ${paginationLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 {page}
                                             </button>
@@ -646,7 +724,7 @@ const ProductManagement = () => {
                                     })}
                                     <button
                                         onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                                        disabled={currentPage === totalPages}
+                                        disabled={currentPage === totalPages || paginationLoading}
                                             className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Next
@@ -665,10 +743,32 @@ const ProductManagement = () => {
                         <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
                         <p className="mt-1 text-sm text-gray-500">
                             {searchTerm || categoryFilter !== 'all' 
-                                ? 'Try adjusting your search or filter criteria.'
+                                ? `No products found matching your search criteria. Try adjusting your search or filter.`
                                 : 'Get started by adding your first product.'
                             }
                         </p>
+                        {(searchTerm || categoryFilter !== 'all') && (
+                            <div className="mt-4">
+                                <button
+                                    onClick={async () => {
+                                        setInputValue('');
+                                        setSearchTerm('');
+                                        setCategoryFilter('all');
+                                        setCurrentPage(1);
+                                        setFilterLoading(true);
+                                        try {
+                                            await getAllProducts(false, 1, ITEMS_PER_PAGE);
+                                        } finally {
+                                            setFilterLoading(false);
+                                        }
+                                    }}
+                                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                >
+                                    <X className="-ml-1 mr-2 h-4 w-4" />
+                                    Clear all filters
+                                </button>
+                            </div>
+                        )}
                         {!searchTerm && categoryFilter === 'all' && (
                             <div className="mt-6">
                                 <Link
@@ -680,8 +780,8 @@ const ProductManagement = () => {
                                 </Link>
                             </div>
                         )}
-                        </div>
-                    )}
+                    </div>
+                )}
                 </div>
 
                 {/* View Product Modal */}
