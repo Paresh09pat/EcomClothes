@@ -12,8 +12,7 @@ const ProductCard = ({ product }) => {
     isAuthenticated,
     toggleWishlist,
     isProductInWishlist,
-    wishlistLoading,
-    setCartitems
+    wishlistLoading
   } = useAuth();
   const navigate = useNavigate();
   const [selectedSize, setSelectedSize] = useState('');
@@ -79,8 +78,9 @@ const ProductCard = ({ product }) => {
 
       if (res.data.success) {
         toast.success(res.data.message);
+        // Dispatch cart refresh event
+        window.dispatchEvent(new CustomEvent('cart-refresh'));
         navigate('/cart');
-        setCartitems((prev)=>!prev)
       }
     } catch (err) {
       toast.error(err.response.data.message);

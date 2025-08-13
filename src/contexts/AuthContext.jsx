@@ -12,8 +12,6 @@ export const AuthProvider = ({ children }) => {
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [isRemoved,setIsRemoved] = useState(false);
-  const [cartItems,setCartitems] = useState(true)
-  const [itemsCart,setItemsCart]=useState(0)
 
   const token = localStorage.getItem('_token_ecommerce');
   const adminToken = sessionStorage.getItem('_token_ecommerce_admin');
@@ -94,7 +92,6 @@ export const AuthProvider = ({ children }) => {
         }
       });
       setWishlist(response.data.products || []);
-      setItemsCart(response?.data?.cartCount)
       return response.data.products;
     }
     catch (err) {
@@ -143,7 +140,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       setWishlist([]);
     }
-  }, [cartItems]);
+  }, [token, isAuthenticated]); // Removed cartItems dependency
 
   const value = {
     user,
@@ -161,13 +158,10 @@ export const AuthProvider = ({ children }) => {
     wishlistLoading,
     isProductInWishlist,
     toggleWishlist,
-    cartItems,
     getWishlist,
     addToWishlist: toggleWishlist,
     isRemoved,
     setIsRemoved,
-    setCartitems,
-    itemsCart,
     updateUserProfile
   };
 

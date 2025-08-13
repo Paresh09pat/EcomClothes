@@ -13,7 +13,7 @@ const ProductDetailPage = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
-  const { isAuthenticated, token, setCartitems } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const navigate = useNavigate();
 
   const fetchProduct = async () => {
@@ -116,7 +116,8 @@ const ProductDetailPage = () => {
 
         if (res.data.success) {
           toast.success(res.data.message || 'Product added to cart!');
-          setCartitems((prev) => !prev); // Trigger cart refresh
+          // Dispatch cart refresh event
+          window.dispatchEvent(new CustomEvent('cart-refresh'));
         }
       } catch (err) {
         toast.error(err.response?.data?.message || 'Failed to add product to cart');

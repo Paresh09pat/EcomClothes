@@ -6,34 +6,43 @@ import { baseUrl } from '../../utils/constant';
 import Loader from '../Loader';
 
 const CartItem = ({ item }) => {
+  // Safety check for item
+  if (!item) {
+    return (
+      <div className="flex flex-col sm:flex-row py-6 border-b border-gray-200 last:border-b-0">
+        <div className="flex-1 p-4 text-center text-gray-500">
+          <p>Cart item not available</p>
+        </div>
+      </div>
+    );
+  }
 
   const {
     token,
     isRemoved,
-    setIsRemoved,
-    setCartitems
+    setIsRemoved
 
   } = useAuth();
 
 
-  const [quantity, setQuantity] = useState(item?.quantity);
+  const [quantity, setQuantity] = useState(item?.quantity || 1);
   const [loading, setLoading] = useState(false);
 
   const product = item.product;
 
   const discountPercentage = 20;
-  const originalPrice = product.price * 1.25;
+  const originalPrice = (product?.price || 0) * 1.25;
 
   // Function to get product image with proper fallback
   const getProductImage = () => {
     // Check for images field first (Cloudinary objects with url property)
-    if (product.images && product.images.length > 0) {
+    if (product?.images && product.images.length > 0) {
       return typeof product.images[0] === 'object' && product.images[0].url 
         ? product.images[0].url 
         : product.images[0];
     }
     // Check for imageUrls field as fallback
-    if (product.imageUrls && product.imageUrls.length > 0) {
+    if (product?.imageUrls && product.imageUrls.length > 0) {
       return product.imageUrls[0];
     }
     // Return a proper fallback image
@@ -43,18 +52,19 @@ const CartItem = ({ item }) => {
   const productImage = getProductImage();
 
   const handleQuantityChange = (newQuantity) => {
-    updateCart(product._id, newQuantity);
+    setQuantity(newQuantity);
+    updateCart(product?._id, newQuantity);
   };
 
   const handleIncreaseQuantity = () => {
-    setQuantity(quantity + 1);
-    handleQuantityChange(quantity + 1);
+    const newQuantity = quantity + 1;
+    handleQuantityChange(newQuantity);
   };
 
   const handleDecreaseQuantity = () => {
     if (quantity > 1) {
-      setQuantity(quantity - 1);
-      handleQuantityChange(quantity - 1);
+      const newQuantity = quantity - 1;
+      handleQuantityChange(newQuantity);
     }
   };
 
@@ -67,10 +77,12 @@ const CartItem = ({ item }) => {
         }
       });
       setIsRemoved((prev) => !prev);
-      setCartitems((prev=>!prev))
+      // Dispatch cart refresh event
+      window.dispatchEvent(new CustomEvent('cart-refresh'));
       
     }
     catch (err) {
+      console.error('Error removing item from cart:', err);
     } finally {
       setLoading(false);
     }
@@ -85,17 +97,54 @@ const CartItem = ({ item }) => {
         }
       });
       setIsRemoved((prev) => !prev);
+      // Dispatch cart refresh event
+      window.dispatchEvent(new CustomEvent('cart-refresh'));
       } catch (err) {
+      console.error('Error updating cart:', err);
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    updateCart(product._id, quantity);
+  // Removed useEffect that was causing unnecessary API calls on every quantity change
 
-  }, [quantity]);
 
+  // Safety check for product
+  if (!product) {
+    return (
+      <div className="flex flex-col sm:flex-row py-6 border-b border-gray-200 last:border-b-0">
+        <div className="flex-1 p-4 text-center text-gray-500">
+          <p>Product information not available</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if product has valid data
+  const hasValidData = product._id && product.name && product.name !== 'Product Name' && product.price && product.price > 0;
+  
+  if (!hasValidData) {
+    return (
+      <div className="flex flex-col sm:flex-row py-6 border-b border-gray-200 last:border-b-0">
+        <div className="flex-1 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-red-600 font-medium">Invalid Product Data</p>
+              <p className="text-sm text-gray-500">
+                This item has incomplete or invalid information and cannot be processed.
+              </p>
+            </div>
+            <button
+              onClick={() => removeFromCart(item._id)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <TrashIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -106,7 +155,7 @@ const CartItem = ({ item }) => {
           <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300 rounded-md"></div>
           <img
             src={productImage}
-            alt={product.name}
+            alt={product?.name || 'Product'}
             className="h-full w-full object-cover object-center rounded-md border border-gray-200"
             onError={(e) => {
               e.target.src = '/cloth1.png';
@@ -123,9 +172,9 @@ const CartItem = ({ item }) => {
         <div className="flex flex-1 flex-col sm:ml-6">
           <div className="flex justify-between">
             <div>
-              <h3 className="text-base font-medium text-gray-900 hover:text-indigo-600 transition-colors">{product.name}</h3>
+              <h3 className="text-base font-medium text-gray-900 hover:text-indigo-600 transition-colors">{product?.name || 'Product Name'}</h3>
               <div className="mt-1 flex items-center">
-                <p className="text-sm text-gray-500 capitalize">{product.category}</p>
+                <p className="text-sm text-gray-500 capitalize">{product?.category || 'Category'}</p>
                 {item.selectedSize && (
                   <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
                     Size: {item.selectedSize}
@@ -141,7 +190,7 @@ const CartItem = ({ item }) => {
 
               {/* Price */}
               <div className="mt-1 flex items-center">
-                <p className="text-base font-medium text-gray-900">₹{product.price.toFixed(2)}</p>
+                <p className="text-base font-medium text-gray-900">₹{(product?.price || 0).toFixed(2)}</p>
                 <p className="ml-2 text-sm text-gray-500 line-through">₹{originalPrice.toFixed(2)}</p>
                 <p className="ml-2 text-xs font-medium text-green-600">{discountPercentage}% off</p>
               </div>
@@ -150,7 +199,7 @@ const CartItem = ({ item }) => {
             </div>
 
             <p className="text-base font-bold text-gray-900">
-              ₹{(product.price * quantity)}
+              ₹{((product?.price || 0) * quantity)}
             </p>
           </div>
 
@@ -190,7 +239,7 @@ const CartItem = ({ item }) => {
 
               <button
                 type="button"
-                onClick={() => removeFromCart(product._id)}
+                onClick={() => removeFromCart(product?._id)}
                 className="text-gray-500 hover:text-red-600 transition-colors"
                 aria-label="Remove item"
               >

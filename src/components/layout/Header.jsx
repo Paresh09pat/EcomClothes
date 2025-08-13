@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import axios from 'axios';
+import { baseUrl } from '../../utils/constant';
 
 import {
   ShoppingBagIcon,
@@ -10,18 +12,67 @@ import {
   HeartIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
-import { useCart } from '../../contexts/CartContext';
+
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, logout, wishlist,itemsCart } = useAuth();
-  const { itemCount } = useCart();
+  const [cartCount, setCartCount] = useState(0);
+  const { user, logout, wishlist, token, isAuthenticated } = useAuth();
+
   const location = useLocation();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
+
+  // Fetch cart count
+  const fetchCartCount = async () => {
+    if (!token || !isAuthenticated) {
+      setCartCount(0);
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${baseUrl}/v1/cart/get-cart`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      const cartItems = res?.data?.cart || [];
+      const validCartItems = cartItems.filter(item => 
+        item && 
+        item.product && 
+        item.product._id && 
+        item.product.name && 
+        item.product.price && 
+        item.product.price > 0
+      );
+      
+      const totalCount = validCartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      setCartCount(totalCount);
+    } catch (err) {
+      console.error('Error fetching cart count:', err);
+      setCartCount(0);
+    }
+  };
+
   // Handle scroll effect
+  // Fetch cart count on authentication change
+  useEffect(() => {
+    fetchCartCount();
+  }, [token, isAuthenticated]);
+
+  // Listen for cart refresh events
+  useEffect(() => {
+    const handleCartRefresh = () => {
+      fetchCartCount();
+    };
+
+    window.addEventListener('cart-refresh', handleCartRefresh);
+    return () => window.removeEventListener('cart-refresh', handleCartRefresh);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 20) {
@@ -123,9 +174,9 @@ const Header = () => {
                   aria-label="Cart"
                 >
                   <ShoppingBagIcon className="h-6 w-6" />
-                  {itemsCart > 0 && (
+                  {cartCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {itemsCart}
+                      {cartCount}
                     </span>
                   )}
                 </Link>

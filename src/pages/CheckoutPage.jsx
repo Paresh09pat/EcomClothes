@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import CheckoutForm from '../components/cart/CheckoutForm';
 import { baseUrl } from '../utils/constant';
@@ -14,18 +14,47 @@ const CheckoutPage = () => {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState(null);
+  
   // Fetch cart data from API
   const getCart = async () => {
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+    
     try {
+      setIsLoading(true);
       const res = await axios.get(`${baseUrl}/v1/cart/get-cart`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      setCart(res?.data?.cart || []);
-      setTotal(res?.data?.totalAmount || 0);
+      
+      // Filter out invalid cart items and calculate total
+      const cartItems = res?.data?.cart || [];
+      
+      const validCartItems = cartItems.filter(item => 
+        item && 
+        item.product && 
+        item.product._id && 
+        item.product.name && 
+        item.product.name !== 'Product Name' &&
+        item.product.price && 
+        item.product.price > 0
+      );
+      
+      // Calculate total from valid items
+      const calculatedTotal = validCartItems.reduce((sum, item) => {
+        const price = item.product?.price || 0;
+        const quantity = item.quantity || 1;
+        return sum + (price * quantity);
+      }, 0);
+      
+      setCart(validCartItems);
+      setTotal(calculatedTotal);
       setIsLoading(false);
     } catch (err) {
+      console.error('Error fetching cart:', err);
       toast.error('Failed to load cart data');
       setIsLoading(false);
     }
@@ -37,29 +66,31 @@ const CheckoutPage = () => {
     }
   }, [token]);
 
-  useEffect(() => {
-    if (!isLoading && cart.length === 0) {
-      toast.info('Cart is empty');
-      navigate('/');
-      return null;
-    }
-  }, [cart, navigate, isLoading]);
+
 
   const handleCheckout = async (formData) => {
     setLoading(true);
 
     try {
-      // Prepare order data
+      // Prepare order data with only valid items
+      const validOrderItems = cart.filter(item => 
+        item?.product?.name && 
+        item?.product?.price && 
+        item.product.price > 0
+      );
+      
+      if (validOrderItems.length === 0) {
+        toast.error('No valid items in cart to checkout');
+        return;
+      }
+      
       const orderData = {
-        items: cart.map(item => {
-
-          return ({
-            productId: item.product._id || item._id,
-            quantity: item.quantity,
-            size: item.selectedSize || item.size,
-            price: item.product?.price || item.price
-          })
-        }),
+        items: validOrderItems.map(item => ({
+          productId: item.product._id || item._id,
+          quantity: item.quantity || 1,
+          size: item.selectedSize || item.size,
+          price: item.product?.price || item.price
+        })),
         totalAmount: total,
         shippingAddress: {
           firstName: formData.firstName,
@@ -72,7 +103,7 @@ const CheckoutPage = () => {
           zipCode: formData.zipCode,
           addressType: formData.addressType,
         },
-        selectedSize: cart.map(item => item.selectedSize || item.size).join(', '),
+        selectedSize: validOrderItems.map(item => item.selectedSize || item.size).join(', '),
         paymentMethod: formData.paymentMethod
       };
 
@@ -90,7 +121,7 @@ const CheckoutPage = () => {
       if (orderResponse?.data?.success) {
         const order = {
           id: orderResponse.data.order._id || `ORD-${Date.now()}`,
-          items: cart,
+          items: validOrderItems, // Use only valid items
           total,
           shippingAddress: formData,
           date: new Date().toISOString(),
@@ -137,9 +168,52 @@ const CheckoutPage = () => {
     );
   }
 
+  // Show empty cart message if no items
+  if (!isLoading && cart.length === 0) {
+    return (
+      <div className="container py-12">
+        <div className="max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <p className="text-gray-500 mb-6">Your cart is empty. Please add items to proceed with checkout.</p>
+            <Link to="/" className="btn bg-indigo-600 hover:bg-indigo-700 text-white mr-4">
+              Continue Shopping
+            </Link>
+            <Link to="/cart" className="btn border border-gray-300 text-gray-700 hover:bg-gray-50">
+              View Cart
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-12">
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+
+      {/* Warning for invalid items */}
+      {cart.some(item => 
+        !item?.product?.price || 
+        item.product.price <= 0 || 
+        !item?.product?.name || 
+        item.product.name === 'Product Name'
+      ) && (
+        <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-md">
+          <div className="flex items-center justify-between">
+            <p className="text-orange-800 text-sm">
+              ⚠️ Some items in your cart have incomplete information and cannot be checked out. 
+              Please return to your cart to remove invalid items.
+            </p>
+            <Link 
+              to="/cart" 
+              className="ml-4 px-4 py-2 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700"
+            >
+              Go to Cart
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Checkout Form */}
@@ -164,55 +238,65 @@ const CheckoutPage = () => {
 
             <div className="flow-root mb-6">
               <ul className="divide-y divide-gray-200">
-                {cart.map(item => {
-                  // Get the correct size property
-                  const selectedSize = item.selectedSize || item.size;
+                {cart.length > 0 ? (
+                  cart.map(item => {
+                    // Get the correct size property
+                    const selectedSize = item.selectedSize || item.size;
+                    
+                    // Safety check for item data
+                    if (!item?.product?.name || !item?.product?.price || item.product.price <= 0) {
+                      return null; // Skip invalid items
+                    }
 
-
-                  return (
-                    <li key={`${item._id || item.product._id}-${selectedSize || 'no-size'}`} className="py-4 flex">
-                      <div className="flex-shrink-0 w-16 h-16">
-                        <img
-                          src={item.product?.imageUrls?.[0] || item.product?.images?.[0] || item.image || '/cloth1.png'}
-                          alt={item.product?.name || item.name}
-                          className="w-full h-full object-cover object-center rounded"
-                          onError={(e) => {
-                            e.target.src = '/cloth1.png';
-                          }}
-                        />
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex justify-between">
-                          <h3 className="text-sm font-medium text-gray-900">
-                            {item.product?.name || item.name}
-                          </h3>
-                          <p className="text-sm font-medium text-gray-900">
-                            ₹{((item.product?.price || item.price) * item.quantity).toFixed(2)}
-                          </p>
+                    return (
+                      <li key={`${item._id || item.product._id}-${selectedSize || 'no-size'}`} className="py-4 flex">
+                        <div className="flex-shrink-0 w-16 h-16">
+                          <img
+                            src={item.product?.imageUrls?.[0] || item.product?.images?.[0] || item.image || '/cloth1.png'}
+                            alt={item.product?.name || item.name}
+                            className="w-full h-full object-cover object-center rounded"
+                            onError={(e) => {
+                              e.target.src = '/cloth1.png';
+                            }}
+                          />
                         </div>
-                        <div className="mt-1 space-y-1">
-                          <p className="text-sm text-gray-500">
-                            Qty: {item.quantity}
-                          </p>
-                          {selectedSize && (
-                            <div className="flex items-center">
-                              <span className="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">
-                                Size: {selectedSize}
-                              </span>
-                            </div>
-                          )}
+                        <div className="ml-4 flex-1">
+                          <div className="flex justify-between">
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {item.product?.name || item.name}
+                            </h3>
+                            <p className="text-sm font-medium text-gray-900">
+                              ₹{((item.product?.price || item.price) * (item.quantity || 1)).toFixed(2)}
+                            </p>
+                          </div>
+                          <div className="mt-1 space-y-1">
+                            <p className="text-sm text-gray-500">
+                              Qty: {item.quantity || 1}
+                            </p>
+                            {selectedSize && (
+                              <div className="flex items-center">
+                                <span className="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                                  Size: {selectedSize}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  );
-                })}
+                      </li>
+                    );
+                  }).filter(Boolean) // Remove null items
+                ) : (
+                  <li className="py-4 text-center text-gray-500">
+                    No valid items in cart
+                  </li>
+                )}
               </ul>
             </div>
 
             <div className="border-t border-gray-200 pt-4">
               <div className="flex justify-between text-base font-medium text-gray-900 mb-2">
                 <p>Subtotal</p>
-                <p>₹{total.toFixed(2)}</p>
+                <p>₹{(total || 0).toFixed(2)}</p>
               </div>
               <div className="flex justify-between text-sm text-gray-600 mb-2">
                 <p>Shipping</p>
@@ -220,7 +304,7 @@ const CheckoutPage = () => {
               </div>
               <div className="flex justify-between text-base font-medium text-gray-900 mb-4">
                 <p>Total</p>
-                <p>₹{total.toFixed(2)}</p>
+                <p>₹{(total || 0).toFixed(2)}</p>
               </div>
 
               <p className="text-sm text-gray-500 mt-4">

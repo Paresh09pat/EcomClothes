@@ -22,8 +22,7 @@ const WishlistPage = () => {
     toggleWishlist, 
     wishlistLoading, 
     isAuthenticated,
-    token,
-    setCartitems
+    token
   } = useAuth();
   const [selectedSizes, setSelectedSizes] = useState({});
 
@@ -92,7 +91,8 @@ const WishlistPage = () => {
 
       if (res.data.success) {
         toast.success(res.data.message || 'Product added to cart!');
-        setCartitems((prev) => !prev); // Trigger cart refresh
+        // Dispatch cart refresh event
+        window.dispatchEvent(new CustomEvent('cart-refresh'));
         
         // Remove from wishlist after successfully adding to cart
         await handleRemoveFromWishlist(product);
