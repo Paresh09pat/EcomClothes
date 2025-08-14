@@ -161,12 +161,6 @@ const ProductCard = ({ product }) => {
 
       <Link to={`/products/${product._id}`} className="block relative overflow-hidden">
         <div className="relative">
-
-          {/* <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-            {discountPercentage}% OFF
-          </div> */}
-
-
           <button
             onClick={handleWishlistToggle}
             disabled={wishlistLoading}
@@ -206,7 +200,7 @@ const ProductCard = ({ product }) => {
                   title={images.length > 1 ? `Click to see next image (${currentImageIndex + 1}/${images.length})` : ''}
                 />
 
-              
+
 
                 {/* Navigation Arrows - Always Visible */}
                 {images.length > 1 && (
@@ -255,8 +249,8 @@ const ProductCard = ({ product }) => {
                           goToImage(index);
                         }}
                         className={`w-2 h-2 rounded-full transition-all duration-200 ${index === currentImageIndex
-                            ? 'bg-white scale-125'
-                            : 'bg-white bg-opacity-60 hover:bg-opacity-80 hover:scale-110'
+                          ? 'bg-white scale-125'
+                          : 'bg-white bg-opacity-60 hover:bg-opacity-80 hover:scale-110'
                           }`}
                         aria-label={`Go to image ${index + 1}`}
                       />

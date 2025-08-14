@@ -155,12 +155,12 @@ const ProductDetailPage = () => {
         {/* Product Image Gallery */}
         <div className="space-y-4">
           {/* Main Image */}
-          <div className="bg-gray-100 rounded-lg overflow-hidden">
+          <div className=" rounded-lg overflow-hidden">
             {image && image.length > 0 ? (
               <img
                 src={image[selectedImageIndex]}
                 alt={product.name}
-                className="w-full h-96 object-cover"
+                className="w-full h-96 object-contain"
                 onError={(e) => {
                   e.target.src = '/placeholder-image.jpg';
                 }}
