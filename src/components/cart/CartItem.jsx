@@ -136,7 +136,7 @@ const CartItem = ({ item }) => {
             </div>
             <button
               onClick={() => removeFromCart(item._id)}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 cursor-pointer hover:text-red-800"
             >
               <TrashIcon className="h-5 w-5" />
             </button>
@@ -240,7 +240,7 @@ const CartItem = ({ item }) => {
               <button
                 type="button"
                 onClick={() => removeFromCart(product?._id)}
-                className="text-gray-500 hover:text-red-600 transition-colors"
+                className="text-gray-500 cursor-pointer hover:text-red-600 transition-colors"
                 aria-label="Remove item"
               >
                 <TrashIcon className="h-5 w-5" />

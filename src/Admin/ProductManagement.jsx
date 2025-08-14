@@ -623,7 +623,7 @@ const ProductManagement = () => {
                                                     setShowDeleteModal(true);
                                                 }}
                                                     disabled={loading}
-                                                    className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
+                                                    className={`p-1 cursor-pointer rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
                                                     title="Delete Product"
                                             >
                                                     <Trash2 size={16} />
@@ -852,7 +852,7 @@ const ProductManagement = () => {
                         <div className="bg-white rounded-lg max-w-md w-full">
                             <div className="p-6">
                                 <div className="flex items-center">
-                                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                                    <div className="mx-auto cursor-pointer flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
                                         <Trash2 className="h-6 w-6 text-red-600" />
                                     </div>
                                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">

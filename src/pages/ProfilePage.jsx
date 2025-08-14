@@ -382,7 +382,7 @@ const ProfilePage = () => {
 
                 <div className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
                   <div className="flex items-center">
-                    <HeartIcon className="h-5 w-5 text-pink-600 mr-3" />
+                    <HeartIcon className="h-5 w-5 text-pink-600 mr-3 cursor-pointer" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">Wishlist Items</p>
                       <p className="text-xs text-gray-500">Saved products</p>
@@ -410,7 +410,7 @@ const ProfilePage = () => {
                 
                 <Link
                   to="/wishlist"
-                  className="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="flex cursor-pointer items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   <HeartIcon className="h-5 w-5 mr-3 text-pink-600" />
                   <span className="font-medium">My Wishlist</span>

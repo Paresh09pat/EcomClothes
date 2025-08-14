@@ -133,7 +133,7 @@ const ProductCard = ({ product }) => {
           <button
             onClick={handleWishlistToggle}
             disabled={wishlistLoading}
-            className={`absolute top-2 right-2 z-10 bg-white p-1.5 rounded-full shadow-md transition-all duration-200 ${wishlistLoading
+            className={`absolute top-2 right-2 cursor-pointer z-10 bg-white p-1.5 rounded-full shadow-md transition-all duration-200 ${wishlistLoading
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:bg-gray-100 hover:scale-110'
               }`}
@@ -236,7 +236,7 @@ const ProductCard = ({ product }) => {
         {/* Button - Always at bottom */}
         <button
           onClick={(e) => handleAddToCart(e, product)}
-          className="mt-3 sm:mt-4 w-full py-2 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium rounded-md flex items-center justify-center transition-colors"
+          className="mt-3 sm:mt-4 w-full py-2 cursor-pointer px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium rounded-md flex items-center justify-center transition-colors"
         >
           <ShoppingBagIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
           Add to Cart

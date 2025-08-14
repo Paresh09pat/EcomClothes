@@ -107,7 +107,7 @@ const WishlistPage = () => {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <HeartIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <HeartIcon className="mx-auto cursor-pointer h-12 w-12 text-gray-400" />
             <h2 className="mt-2 text-lg font-medium text-gray-900">Please login to view your wishlist</h2>
             <p className="mt-1 text-sm text-gray-500">
               You need to be logged in to access your wishlist.
@@ -147,7 +147,7 @@ const WishlistPage = () => {
             </div>
           </div>
           
-          <HeartIconSolid className="h-8 w-8 text-pink-500" />
+          <HeartIconSolid className="h-8 cursor-pointer w-8 text-pink-500" />
         </div>
         
         {/* Wishlist Content */}
@@ -158,7 +158,7 @@ const WishlistPage = () => {
           </div>
         ) : wishlist.length === 0 ? (
           <div className="text-center py-12">
-            <HeartIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <HeartIcon className="mx-auto h-12 cursor-pointer w-12 text-gray-400" />
             <h2 className="mt-2 text-lg font-medium text-gray-900">Your wishlist is empty</h2>
             <p className="mt-1 text-sm text-gray-500">
               Start browsing and add items you love to your wishlist.
@@ -310,7 +310,7 @@ const WishlistPage = () => {
                       <div className="flex space-x-2">
                         <button
                             onClick={() => handleMoveToCart(item)}
-                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md flex items-center justify-center text-sm font-medium transition-colors"
+                          className="flex-1 cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md flex items-center justify-center text-sm font-medium transition-colors"
                         >
                           <ShoppingBagIcon className="h-4 w-4 mr-1" />
                           Add to Cart

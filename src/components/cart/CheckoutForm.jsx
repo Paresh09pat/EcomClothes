@@ -396,7 +396,7 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center px-6 py-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 disabled:opacity-50"
+              className="w-full flex cursor-pointer justify-center items-center px-6 py-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 disabled:opacity-50"
             >
               {loading ? 'Processing...' : 'PLACE ORDER'}
             </button>

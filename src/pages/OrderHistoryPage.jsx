@@ -90,12 +90,6 @@ const OrderHistoryPage = () => {
   };
 
   
-
-  // Function to handle return order
-  const handleReturnOrder = (orderId) => {
-    alert(`Return process initiated for order #${orderId.slice(-8).toUpperCase()}. Please check your email for return instructions.`);
-  };
-  
   // Function to get product image with proper fallback
   const getProductImage = (item) => {
     if (item.product) {
@@ -144,22 +138,7 @@ const OrderHistoryPage = () => {
             Continue Shopping
           </Link>
         </div>
-        
-        {/* Return Policy Notice */}
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded-md">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <ArrowPathIcon className="h-5 w-5 text-blue-500" />
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">7-Day Return Policy</h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <p>All products can be returned within 7 days of delivery for a full refund. The product must be unused and in its original packaging.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
+
         {/* Error State */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
@@ -281,16 +260,7 @@ const OrderHistoryPage = () => {
                         View Details
                         <ChevronRightIcon className="h-4 w-4 ml-1" />
                       </Link>
-                      
-                      {isReturnable && order.status.toLowerCase() === 'delivered' && (
-                        <button 
-                          className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
-                          onClick={() => handleReturnOrder(order._id)}
-                        >
-                          Return Order
-                          <ArrowPathIcon className="h-4 w-4 ml-1" />
-                        </button>
-                      )}
+              
                     </div>
                   </div>
                 </div>

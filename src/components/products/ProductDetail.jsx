@@ -151,7 +151,7 @@ const ProductDetail = ({ product }) => {
               </span>
               <button 
                 onClick={handleWishlistToggle}
-                className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className="absolute top-4 right-4 cursor-pointer bg-white p-2 rounded-full shadow-md z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               >
                 {isProductInWishlistState ? (
                   <HeartIconSolid className="h-5 w-5 text-pink-500" />
@@ -169,7 +169,7 @@ const ProductDetail = ({ product }) => {
             <div className="mt-4 flex justify-between">
               <button 
                 onClick={handleWishlistToggle}
-                className={`flex-1 py-3 border font-medium rounded-md transition-colors mr-2 ${isProductInWishlistState ? 'border-pink-600 text-pink-600 hover:bg-pink-50' : 'border-indigo-600 text-indigo-600 hover:bg-indigo-50'}`}
+                className={`flex-1 py-3 border cursor-pointer font-medium rounded-md transition-colors mr-2 ${isProductInWishlistState ? 'border-pink-600 text-pink-600 hover:bg-pink-50' : 'border-indigo-600 text-indigo-600 hover:bg-indigo-50'}`}
               >
                 {isProductInWishlistState ? (
                   <>
@@ -185,7 +185,7 @@ const ProductDetail = ({ product }) => {
               </button>
               <button
                 type="button"
-                className="flex-1 items-center justify-center rounded-md border border-transparent bg-indigo-600 py-3 px-8 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ml-2"
+                className="flex-1 cursor-pointer items-center justify-center rounded-md border border-transparent bg-indigo-600 py-3 px-8 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ml-2"
                 onClick={handleAddToCart}
               >
                 <ShoppingBagIcon className="h-5 w-5 inline-block mr-2" />

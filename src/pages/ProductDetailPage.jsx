@@ -234,7 +234,7 @@ const ProductDetailPage = () => {
             <button
               type="button"
               onClick={handleAddToCart}
-              className="mt-6 w-full btn bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-md transition-colors"
+              className="mt-6 cursor-pointer w-full btn bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-md transition-colors"
             >
               Add to Cart {availableSizes.length > 0 && selectedSize && `(Size: ${selectedSize})`}
             </button>

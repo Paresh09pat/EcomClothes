@@ -478,7 +478,7 @@ const AdminDashboard = () => {
                                                 <button
                                                     onClick={() => deleteOrder(order._id)}
                                                     disabled={loading}
-                                                    className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
+                                                    className={`p-1 cursor-pointer rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}
                                                     title="Delete Order"
                                                 >
                                                     <Trash2 size={14} className="sm:w-4 sm:h-4" />

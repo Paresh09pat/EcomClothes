@@ -159,7 +159,7 @@ const Header = () => {
               {/* Wishlist */}
               <Link
                 to="/wishlist"
-                className="text-gray-700 hover:text-indigo-600 transition-colors relative hidden md:block"
+                className="text-gray-700 cursor-pointer hover:text-indigo-600 transition-colors relative hidden md:block"
                 aria-label="Wishlist"
               >
                 <HeartIcon className="h-6 w-6" />
@@ -260,7 +260,7 @@ const Header = () => {
                     <div className="flex justify-between mb-6">
                       <Link 
                         to="/wishlist" 
-                        className="text-gray-700 hover:text-indigo-600 flex items-center"
+                        className="text-gray-700 cursor-pointer hover:text-indigo-600 flex items-center"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         <HeartIcon className="h-5 w-5 mr-2" />
