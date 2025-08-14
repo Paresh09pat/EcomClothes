@@ -178,26 +178,26 @@ const WishlistPage = () => {
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {wishlist.map((item) => {
                   // Handle images with proper fallback for both images and imageUrls arrays
-                  let image;
+                  let images = [];
                   if (item?.images?.length > 0) {
                     // Handle Cloudinary objects with url property
-                    image = typeof item.images[0] === 'object' && item.images[0].url 
-                      ? item.images[0].url 
-                      : item.images[0];
+                    images = item.images.map(img => 
+                      typeof img === 'object' && img.url ? img.url : img
+                    );
                   } else if (item?.imageUrls) {
                     if (typeof item.imageUrls === 'string') {
                       try {
                         const parsedImages = JSON.parse(item.imageUrls);
-                        image = Array.isArray(parsedImages) ? parsedImages[0] : parsedImages;
+                        images = Array.isArray(parsedImages) ? parsedImages : [parsedImages];
                       } catch (e) {
-                        image = item.imageUrls;
+                        images = [item.imageUrls];
                       }
                     } else {
-                      image = Array.isArray(item.imageUrls) ? item.imageUrls[0] : item.imageUrls;
+                      images = Array.isArray(item.imageUrls) ? item.imageUrls : [item.imageUrls];
                     }
-                  } else {
-                    image = '';
                   }
+                  
+                  const image = images[0] || ''; // Use first image for display
 
                   // Parse available sizes
                   let availableSizes = [];
@@ -242,14 +242,22 @@ const WishlistPage = () => {
                     {/* Product Image */}
                       <Link to={`/products/${item._id}`} className="block relative h-48 overflow-hidden">
                         {image ? (
-                      <img 
-                            src={image}
-                        alt={item.name} 
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        onError={(e) => {
-                          e.target.src = '/placeholder-image.jpg';
-                        }}
-                      />
+                          <>
+                            <img 
+                              src={image}
+                              alt={item.name} 
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              onError={(e) => {
+                                e.target.src = '/placeholder-image.jpg';
+                              }}
+                            />
+                            {/* Multiple Images Indicator */}
+                            {images.length > 1 && (
+                              <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
+                                +{images.length - 1} more
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gray-200">
                             <span className="text-gray-400">No Image</span>

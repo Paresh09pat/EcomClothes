@@ -242,6 +242,29 @@ const AdminDashboard = () => {
         return '/placeholder-image.jpg';
     };
 
+    // Get all product images for gallery display
+    const getAllProductImages = (product) => {
+        let images = [];
+        
+        // Add Cloudinary images
+        if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+            const cloudinaryImages = product.images.map(img => 
+                typeof img === 'object' && img.url ? img.url : img
+            );
+            images = [...images, ...cloudinaryImages];
+        }
+        
+        // Add imageUrls
+        if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
+            images = [...images, ...product.imageUrls];
+        }
+        
+        // Filter out invalid URLs
+        images = images.filter(img => img && typeof img === 'string' && img.trim() !== '');
+        
+        return images;
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Notification Toast */}
@@ -636,27 +659,47 @@ const AdminDashboard = () => {
                                 <div>
                                     <h3 className="font-semibold text-gray-900 mb-2">Order Items</h3>
                                     <div className="space-y-2">
-                                        {selectedOrder.items.map((item, index) => (
-                                            <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded">
-                                                <div className="flex items-center gap-2 sm:gap-3">
-                                                    <img
-                                                        src={getProductImageUrl(item.product)}
-                                                        alt={item.product.name}
-                                                        className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded"
-                                                        onError={(e) => {
-                                                            e.target.src = '/placeholder-image.jpg';
-                                                        }}
-                                                    />
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
-                                                        <p className="text-xs sm:text-sm text-gray-600">Category: {item.product.category}</p>
-                                                        <p className="text-xs sm:text-sm text-gray-600">Quantity: {item.quantity}</p>
-                                                        <p className="text-xs sm:text-sm text-gray-600">Size: {selectedOrder.selectedSize || 'N/A'}</p>
+                                        {selectedOrder.items.map((item, index) => {
+                                            const allImages = getAllProductImages(item.product);
+                                            return (
+                                                <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded">
+                                                    <div className="flex items-center gap-2 sm:gap-3">
+                                                        {/* Product Image Gallery */}
+                                                        <div className="relative">
+                                                            {allImages.length > 0 ? (
+                                                                <div className="relative">
+                                                                    <img
+                                                                        src={allImages[0]}
+                                                                        alt={item.product.name}
+                                                                        className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded"
+                                                                        onError={(e) => {
+                                                                            e.target.src = '/placeholder-image.jpg';
+                                                                        }}
+                                                                    />
+                                                                    {/* Multiple Images Indicator */}
+                                                                    {allImages.length > 1 && (
+                                                                        <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                                                            +{allImages.length - 1}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded flex items-center justify-center">
+                                                                    <span className="text-gray-400 text-xs">No Image</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
+                                                            <p className="text-xs sm:text-sm text-gray-600">Category: {item.product.category}</p>
+                                                            <p className="text-xs sm:text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                                            <p className="text-xs sm:text-sm text-gray-600">Size: {selectedOrder.selectedSize || 'N/A'}</p>
+                                                        </div>
                                                     </div>
+                                                    <p className="font-medium text-sm sm:text-base ml-2">{formatCurrency(item.product.price)}</p>
                                                 </div>
-                                                <p className="font-medium text-sm sm:text-base ml-2">{formatCurrency(item.product.price)}</p>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-gray-200">
                                         <div className="flex justify-between items-center">

@@ -1,7 +1,7 @@
 import { HeartIcon, ShoppingBagIcon, StarIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import axios from 'axios';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
@@ -16,28 +16,65 @@ const ProductCard = ({ product }) => {
   } = useAuth();
   const navigate = useNavigate();
   const [selectedSize, setSelectedSize] = useState('');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { token } = useAuth()
-  // Handle images with proper fallback for both images and imageUrls arrays
-  let image;
-  if (product?.images?.length > 0) {
-    // Handle Cloudinary objects with url property
-    image = product.images.map(img => 
-      typeof img === 'object' && img.url ? img.url : img
-    );
-  } else if (product?.imageUrls) {
-    // Parse imageUrls if it's a string, otherwise use as-is
-    if (typeof product.imageUrls === 'string') {
-      try {
-        image = JSON.parse(product.imageUrls);
-      } catch (e) {
-        image = [product.imageUrls]; // Fallback to single item array
-      }
-    } else {
-      image = product.imageUrls;
+
+  // Simple image processing - get all available images
+  const getProductImages = () => {
+    let images = [];
+
+    // Add Cloudinary images if they exist
+    if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
+      const cloudinaryImages = product.images.map(img =>
+        typeof img === 'object' && img.url ? img.url : img
+      );
+      images = [...images, ...cloudinaryImages];
     }
-  } else {
-    image = [];
-  }
+
+    // Add imageUrls if they exist
+    if (product?.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
+      images = [...images, ...product.imageUrls];
+    }
+
+    // If no images found, try to parse imageUrls as string
+    if (images.length === 0 && product?.imageUrls) {
+      if (typeof product.imageUrls === 'string') {
+        try {
+          const parsed = JSON.parse(product.imageUrls);
+          images = Array.isArray(parsed) ? parsed : [product.imageUrls];
+        } catch (e) {
+          images = [product.imageUrls];
+        }
+      }
+    }
+
+    // Filter out invalid URLs and ensure we have an array
+    images = images.filter(img => img && typeof img === 'string' && img.trim() !== '');
+
+    console.log(`Product ${product._id} - Images found:`, images);
+    return images;
+  };
+
+  const images = getProductImages();
+
+  // Simple navigation functions
+  const nextImage = () => {
+    if (images.length > 1) {
+      setCurrentImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1);
+    }
+  };
+
+  const prevImage = () => {
+    if (images.length > 1) {
+      setCurrentImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1);
+    }
+  };
+
+  const goToImage = (index) => {
+    if (index >= 0 && index < images.length) {
+      setCurrentImageIndex(index);
+    }
+  };
 
   // Parse sizes if it's a string, otherwise use as-is
   let availableSizes = [];
@@ -107,7 +144,7 @@ const ProductCard = ({ product }) => {
           : 'Product added to wishlist!';
         toast.success(response.data.message || message);
       }
-    } catch (error) { 
+    } catch (error) {
       toast.error('Failed to update wishlist. Please try again.');
     }
   };
@@ -125,9 +162,9 @@ const ProductCard = ({ product }) => {
       <Link to={`/products/${product._id}`} className="block relative overflow-hidden">
         <div className="relative">
 
-          <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
+          {/* <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
             {discountPercentage}% OFF
-          </div>
+          </div> */}
 
 
           <button
@@ -146,19 +183,102 @@ const ProductCard = ({ product }) => {
             )}
           </button>
 
-          <div className="h-48 sm:h-64 overflow-hidden rounded-t-lg bg-gray-100">
-            {image && image.length > 0 ? (
-              <img
-                src={image[0]} // Show only the first image
-                alt={product.name}
-                className="h-full w-full object-cover object-center transform transition-all duration-700 ease-in-out group-hover:scale-105"
-                onError={(e) => {
-                  e.target.src = '/placeholder-image.jpg';
-                }}
-              />
+          <div className="h-48 sm:h-64 overflow-hidden rounded-t-lg bg-gray-100 relative group">
+            {images && images.length > 0 ? (
+              <>
+                {/* Main Image */}
+                <img
+                  key={`${product._id}-${currentImageIndex}`}
+                  src={images[currentImageIndex]}
+                  alt={`${product.name} - Image ${currentImageIndex + 1}`}
+                  className="h-full w-full object-cover object-center transition-all duration-300 group-hover:scale-105 cursor-pointer"
+                  onClick={(e) => {
+                    if (images.length > 1) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      nextImage();
+                    }
+                  }}
+                  onError={(e) => {
+                    console.log(`Image failed to load: ${images[currentImageIndex]}`);
+                    e.target.src = '/placeholder-image.jpg';
+                  }}
+                  title={images.length > 1 ? `Click to see next image (${currentImageIndex + 1}/${images.length})` : ''}
+                />
+
+              
+
+                {/* Navigation Arrows - Always Visible */}
+                {images.length > 1 && (
+                  <>
+                    {/* Previous Button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        prevImage();
+                      }}
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all shadow-lg"
+                      aria-label="Previous image"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        nextImage();
+                      }}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all shadow-lg"
+                      aria-label="Next image"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                {/* Bottom Image Dots */}
+                {images.length > 1 && (
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1.5">
+                    {images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          goToImage(index);
+                        }}
+                        className={`w-2 h-2 rounded-full transition-all duration-200 ${index === currentImageIndex
+                            ? 'bg-white scale-125'
+                            : 'bg-white bg-opacity-60 hover:bg-opacity-80 hover:scale-110'
+                          }`}
+                        aria-label={`Go to image ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="h-full w-full flex items-center justify-center bg-gray-200">
                 <span className="text-gray-400">No Image</span>
+
+                {/* Fallback: Try to show any available image */}
+                {product?.imageUrls && typeof product.imageUrls === 'string' && (
+                  <div className="absolute bottom-8 left-2 right-2 text-center">
+                    <img
+                      src={product.imageUrls}
+                      alt={product.name}
+                      className="w-16 h-16 object-cover rounded mx-auto"
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

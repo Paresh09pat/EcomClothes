@@ -12,6 +12,7 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const { addToCart } = useCart();
   const { isAuthenticated, token } = useAuth();
   const navigate = useNavigate();
@@ -151,13 +152,58 @@ const ProductDetailPage = () => {
   return (
     <div className="container py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Product Image */}
-        <div className="bg-gray-100 rounded-lg overflow-hidden">
-          <img
-            src={image[0]}
-            alt={product.name}
-            className="w-full h-auto object-cover"
-          />
+        {/* Product Image Gallery */}
+        <div className="space-y-4">
+          {/* Main Image */}
+          <div className="bg-gray-100 rounded-lg overflow-hidden">
+            {image && image.length > 0 ? (
+              <img
+                src={image[selectedImageIndex]}
+                alt={product.name}
+                className="w-full h-96 object-cover"
+                onError={(e) => {
+                  e.target.src = '/placeholder-image.jpg';
+                }}
+              />
+            ) : (
+              <div className="w-full h-96 flex items-center justify-center bg-gray-200">
+                <span className="text-gray-400">No Image Available</span>
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnail Gallery */}
+          {image && image.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {image.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedImageIndex === index
+                      ? 'border-indigo-600 ring-2 ring-indigo-200'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <img
+                    src={img}
+                    alt={`${product.name} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = '/placeholder-image.jpg';
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Image Counter */}
+          {image && image.length > 1 && (
+            <div className="text-center text-sm text-gray-500">
+              Image {selectedImageIndex + 1} of {image.length}
+            </div>
+          )}
         </div>
 
         {/* Product Details */}

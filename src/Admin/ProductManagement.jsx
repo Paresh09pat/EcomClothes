@@ -30,6 +30,7 @@ const ProductManagement = () => {
     const [loading, setLoading] = useState(false);
     const [paginationLoading, setPaginationLoading] = useState(false);
     const [filterLoading, setFilterLoading] = useState(false);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
     const [lastRefresh, setLastRefresh] = useState(null);
 
@@ -241,6 +242,29 @@ const ProductManagement = () => {
         return '/placeholder-image.jpg';
     };
 
+    // Get all product images for gallery display
+    const getAllProductImages = (product) => {
+        let images = [];
+        
+        // Add Cloudinary images
+        if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+            const cloudinaryImages = product.images.map(img => 
+                typeof img === 'object' && img.url ? img.url : img
+            );
+            images = [...images, ...cloudinaryImages];
+        }
+        
+        // Add imageUrls
+        if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
+            images = [...images, ...product.imageUrls];
+        }
+        
+        // Filter out invalid URLs
+        images = images.filter(img => img && typeof img === 'string' && img.trim() !== '');
+        
+        return images;
+    };
+
     // Get unique categories
     const getCategories = () => {
         const categories = [...new Set(products.map(product => product.category))];
@@ -288,6 +312,33 @@ const ProductManagement = () => {
             window.removeEventListener('focus', handleFocus);
         };
     }, [adminToken, currentPage]);
+
+    // Keyboard navigation for product preview
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (showViewModal && selectedProduct) {
+                const allImages = getAllProductImages(selectedProduct);
+                if (allImages.length > 1) {
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        setSelectedImageIndex(prev => 
+                            prev === 0 ? allImages.length - 1 : prev - 1
+                        );
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        setSelectedImageIndex(prev => 
+                            prev === allImages.length - 1 ? 0 : prev + 1
+                        );
+                    }
+                }
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [showViewModal, selectedProduct]);
 
 
         return (
@@ -550,11 +601,11 @@ const ProductManagement = () => {
                                                         }}
                                                     />
                                                 </div>
-                                                <div className="ml-4">
+                                                <div className="ml-4 bg">
                                                     <div className="text-sm font-medium text-gray-900 line-clamp-1">
                                                         {product.name}
                                                     </div>
-                                                    <div className="text-sm text-gray-500 line-clamp-2">
+                                                    <div className="text-sm text-gray-500 line-clamp-2" style={{ maxWidth: '350px', wordBreak: 'break-word', whiteSpace: 'normal', overflowWrap: 'break-word' }}>
                                                         {product.description}
                                                     </div>
                                                 </div>
@@ -602,7 +653,8 @@ const ProductManagement = () => {
                                             <button
                                                 onClick={() => {
                                                     setSelectedProduct(product);
-                                                        setShowViewModal(true);
+                                                    setSelectedImageIndex(0); // Reset to first image
+                                                    setShowViewModal(true);
                                                 }}
                                                     disabled={loading}
                                                     className={`p-1 rounded ${loading ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-900'}`}
@@ -787,16 +839,107 @@ const ProductManagement = () => {
                             </div>
 
                             <div className="space-y-6">
-                                {/* Product Image */}
+                                {/* Product Image Gallery */}
                                 <div className="flex justify-center">
-                                    <img
-                                        src={getProductImageUrl(selectedProduct)}
-                                        alt={selectedProduct.name}
-                                        className="w-64 h-64 object-cover rounded-lg shadow-md"
-                                        onError={(e) => {
-                                            e.target.src = '/placeholder-image.jpg';
-                                        }}
-                                    />
+                                    {(() => {
+                                        const allImages = getAllProductImages(selectedProduct);
+                                        if (allImages.length === 0) {
+                                            return (
+                                                <div className="w-64 h-64 bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
+                                                    <span className="text-gray-400">No Image Available</span>
+                                                </div>
+                                            );
+                                        }
+                                        
+                                        if (allImages.length === 1) {
+                                            return (
+                                                <img
+                                                    src={allImages[0]}
+                                                    alt={selectedProduct.name}
+                                                    className="w-64 h-64 object-cover rounded-lg shadow-md"
+                                                    onError={(e) => {
+                                                        e.target.src = '/placeholder-image.jpg';
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        
+                                        // Multiple images - show gallery with navigation
+                                        return (
+                                            <div className="space-y-4">
+                                                {/* Main Image */}
+                                                <div className="relative">
+                                                    <img
+                                                        src={allImages[selectedImageIndex]}
+                                                        alt={selectedProduct.name}
+                                                        className="w-64 h-64 object-cover rounded-lg shadow-md"
+                                                        onError={(e) => {
+                                                            e.target.src = '/placeholder-image.jpg';
+                                                        }}
+                                                    />
+                                                    <div className="absolute top-2 right-2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded-full">
+                                                        {selectedImageIndex + 1} / {allImages.length}
+                                                    </div>
+                                                    
+                                                    {/* Navigation Arrows */}
+                                                    {allImages.length > 1 && (
+                                                        <>
+                                                            {/* Previous Button */}
+                                                            <button
+                                                                onClick={() => setSelectedImageIndex(prev => 
+                                                                    prev === 0 ? allImages.length - 1 : prev - 1
+                                                                )}
+                                                                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all shadow-lg"
+                                                                aria-label="Previous image"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                                </svg>
+                                                            </button>
+                                                            
+                                                            {/* Next Button */}
+                                                            <button
+                                                                onClick={() => setSelectedImageIndex(prev => 
+                                                                    prev === allImages.length - 1 ? 0 : prev + 1
+                                                                )}
+                                                                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all shadow-lg"
+                                                                aria-label="Next image"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                </svg>
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                
+                                                {/* Thumbnail Gallery */}
+                                                <div className="flex gap-2 overflow-x-auto justify-center">
+                                                    {allImages.map((img, index) => (
+                                                        <img
+                                                            key={index}
+                                                            src={img}
+                                                            alt={`${selectedProduct.name} - Image ${index + 1}`}
+                                                            className={`w-16 h-16 object-cover rounded border-2 cursor-pointer transition-all ${
+                                                                index === selectedImageIndex 
+                                                                    ? 'border-blue-500 scale-110' 
+                                                                    : 'border-gray-300 hover:border-blue-400'
+                                                            }`}
+                                                            onClick={() => setSelectedImageIndex(index)}
+                                                            onError={(e) => {
+                                                                e.target.src = '/placeholder-image.jpg';
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                
+                                                {/* Image Info */}
+                                                <div className="text-center text-sm text-gray-600">
+                                                    Image {selectedImageIndex + 1} of {allImages.length}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
 
                                 {/* Product Info */}

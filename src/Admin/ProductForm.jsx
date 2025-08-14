@@ -48,7 +48,30 @@ const ProductForm = () => {
         
         try {
             setLoadingProduct(true);
+            
+            // First try to get the specific product directly by ID
+            try {
+                const directResponse = await axios.get(`${baseUrl}/admin/get-product/${productId}`, {
+                    headers: {
+                        Authorization: `Bearer ${adminToken}`
+                    }
+                });
+                
+                if (directResponse.data.success) {
+                    const product = directResponse.data.product;
+                    await setProductData(product);
+                    return;
+                }
+            } catch (directError) {
+                console.log("Direct product fetch failed, trying fallback method:", directError.message);
+            }
+            
+            // Fallback: Get all products with higher limit to search through
             const response = await axios.get(`${baseUrl}/admin/get-all-products`, {
+                params: {
+                    page: 1,
+                    limit: 1000 // Get more products to search through
+                },
                 headers: {
                     Authorization: `Bearer ${adminToken}`
                 }
@@ -59,34 +82,14 @@ const ProductForm = () => {
                 const product = response.data.products.find(p => p._id === productId);
                 
                 if (!product) {
-                    toast.error("Product not found");
+                    console.error("Product not found in search. ProductId:", productId);
+                    console.error("Available products count:", response.data.products.length);
+                    toast.error("Product not found. Please check the product ID.");
                     navigate("/admin/product-management");
                     return;
                 }
                 
-                // Parse sizes if it's a JSON string
-                let parsedSizes = [];
-                try {
-                    parsedSizes = typeof product.size === 'string' ? JSON.parse(product.size) : product.size || [];
-                } catch {
-                    parsedSizes = [];
-                }
-
-                setFormData({
-                    name: product.name || "",
-                    description: product.description || "",
-                    price: product.price?.toString() || "",
-                    category: product.category || "",
-                    size: parsedSizes,
-                    images: product.imageUrls || [],
-                    is_featured: product.isFeatured || false,
-                });
-
-                // Set image previews but let user choose upload method
-                if (product.imageUrls && product.imageUrls.length > 0) {
-                    setImagePreview(product.imageUrls);
-                    // Don't automatically set to "url" - let user choose
-                }
+                await setProductData(product);
             } else {
                 toast.error("Failed to load product data");
                 navigate("/admin/product-management");
@@ -97,6 +100,32 @@ const ProductForm = () => {
             navigate("/admin/product-management");
         } finally {
             setLoadingProduct(false);
+        }
+    };
+
+    // Helper function to set product data
+    const setProductData = async (product) => {
+        // Parse sizes if it's a JSON string
+        let parsedSizes = [];
+        try {
+            parsedSizes = typeof product.size === 'string' ? JSON.parse(product.size) : product.size || [];
+        } catch {
+            parsedSizes = [];
+        }
+
+        setFormData({
+            name: product.name || "",
+            description: product.description || "",
+            price: product.price?.toString() || "",
+            category: product.category || "",
+            size: parsedSizes,
+            images: product.imageUrls || [],
+            is_featured: product.isFeatured || false,
+        });
+
+        // Set image previews but let user choose upload method
+        if (product.imageUrls && product.imageUrls.length > 0) {
+            setImagePreview(product.imageUrls);
         }
     };
 
