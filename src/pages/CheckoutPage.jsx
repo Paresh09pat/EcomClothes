@@ -92,16 +92,12 @@ const CheckoutPage = () => {
           price: item.product?.price || item.price
         })),
         totalAmount: total,
-        shippingAddress: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
+        address: {
+          line1: formData.address,
           city: formData.city,
           state: formData.state,
-          zipCode: formData.zipCode,
-          addressType: formData.addressType,
+          pincode: formData.zipCode,
+          country: 'India'
         },
         selectedSize: validOrderItems.map(item => item.selectedSize || item.size).join(', '),
         paymentMethod: formData.paymentMethod
@@ -123,7 +119,13 @@ const CheckoutPage = () => {
           id: orderResponse.data.order._id || `ORD-${Date.now()}`,
           items: validOrderItems, // Use only valid items
           total,
-          shippingAddress: formData,
+          address: {
+            line1: formData.address,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.zipCode,
+            country: 'India'
+          },
           date: new Date().toISOString(),
           orderNumber: orderResponse.data.order.orderNumber || `ORD-${Date.now()}`
         };

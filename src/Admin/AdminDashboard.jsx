@@ -403,6 +403,7 @@ const AdminDashboard = () => {
                                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Items</th>
                                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Address</th>
                                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Payment</th>
                                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Date</th>
                                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -436,6 +437,19 @@ const AdminDashboard = () => {
                                                 <span className="hidden sm:inline">{order.status}</span>
                                                 <span className="sm:hidden">{order.status.split(' ')[0]}</span>
                                             </span>
+                                        </td>
+                                        <td className="px-3 sm:px-6 py-4 hidden lg:table-cell">
+                                            <div className="text-sm text-gray-900">
+                                                {order.address ? (
+                                                    <div>
+                                                        {order.address.city && <div>{order.address.city}</div>}
+                                                        {order.address.state && <div className="text-gray-500 text-xs">{order.address.state}</div>}
+                                                        {order.address.pincode && <div className="text-gray-500 text-xs">{order.address.pincode}</div>}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">No address</span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                                             <div className="text-sm text-gray-900 capitalize">{order.paymentMethod}</div>
@@ -591,6 +605,33 @@ const AdminDashboard = () => {
                                         <p><strong>Phone:</strong> {selectedOrder.user.phone}</p>
                                     </div>
                                 </div>
+
+                                {/* Address Information */}
+                                {selectedOrder.address && (
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900 mb-2">Delivery Address</h3>
+                                        <div className="bg-gray-50 p-3 rounded-md">
+                                            {selectedOrder.address.line1 && (
+                                                <p><strong>Address:</strong> {selectedOrder.address.line1}</p>
+                                            )}
+                                            {selectedOrder.address.city && (
+                                                <p><strong>City:</strong> {selectedOrder.address.city}</p>
+                                            )}
+                                            {selectedOrder.address.state && (
+                                                <p><strong>State:</strong> {selectedOrder.address.state}</p>
+                                            )}
+                                            {selectedOrder.address.pincode && (
+                                                <p><strong>Pincode:</strong> {selectedOrder.address.pincode}</p>
+                                            )}
+                                            {selectedOrder.address.country && (
+                                                <p><strong>Country:</strong> {selectedOrder.address.country}</p>
+                                            )}
+                                            {(!selectedOrder.address.line1 && !selectedOrder.address.city && !selectedOrder.address.state && !selectedOrder.address.pincode && !selectedOrder.address.country) && (
+                                                <p className="text-gray-500 italic">No address information available</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div>
                                     <h3 className="font-semibold text-gray-900 mb-2">Order Items</h3>

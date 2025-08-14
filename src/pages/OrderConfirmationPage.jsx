@@ -32,7 +32,6 @@ const OrderConfirmationPage = () => {
           return;
         }
       } catch (specificOrderError) {
-        console.log('Specific order endpoint not available, falling back to all orders');
       }
       
       // Fallback: fetch all orders and find the specific one

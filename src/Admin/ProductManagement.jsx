@@ -35,20 +35,6 @@ const ProductManagement = () => {
 
     const { adminToken } = useAuth();
 
-    console.log("totalPages",totalPages);
-
-    // Remove client-side pagination helper functions since we're using server-side pagination
-    // const getPaginatedData = (data, page, itemsPerPage = ITEMS_PER_PAGE) => {
-    //     if (!Array.isArray(data) || data.length === 0) return [];
-    //     const startIndex = (page - 1) * itemsPerPage;
-    //     const endIndex = startIndex + itemsPerPage;
-    //     return data.slice(startIndex, endIndex);
-    // };
-
-    // const getTotalPages = (totalItems, itemsPerPage = ITEMS_PER_PAGE) => {
-    //     if (totalItems <= 0) return 1;
-    //     return Math.ceil(totalItems / itemsPerPage);
-    // };
 
     const getPageInfo = (currentPage, totalItems, itemsPerPage = ITEMS_PER_PAGE) => {
         if (totalItems <= 0) return { startItem: 0, endItem: 0 };
@@ -166,8 +152,6 @@ const ProductManagement = () => {
                 },
                 params: params
             });
-
-            console.log("API Response:", response.data);   
 
             if (response.data.success) {
                 // Set products from API response
