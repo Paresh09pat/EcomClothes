@@ -522,6 +522,9 @@ const ProductForm = () => {
                                 <p className="text-xs text-gray-500">
                                     Supported: Cloudinary, image CDNs, direct image URLs (.jpg, .png, etc.)
                                 </p>
+                                <p className="text-xs text-red-500">
+                                    <strong>Note:</strong> After adding link in placeholder, press enter to add the image.
+                                </p>
                             </div>
                         )}
 
