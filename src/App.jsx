@@ -16,6 +16,7 @@ import RegisterPage from './pages/RegisterPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
+import UPIPaymentPage from './pages/UPIPaymentPage';
 
 import AdminLogin from './Admin/AdminLogin';
 import AdminProtect from './components/auth/AdminProtect';
@@ -95,6 +96,7 @@ function App() {
                 >
                   <Route path="cart" element={<CartPage />} />
                   <Route path="checkout" element={<CheckoutPage />} />
+                  <Route path="upi-payment" element={<UPIPaymentPage />} />
                   <Route path="order-confirmation" element={<OrderConfirmationPage />} />
                   <Route path="orders" element={<OrderHistoryPage />} />
                   <Route path="wishlist" element={<WishlistPage />} />

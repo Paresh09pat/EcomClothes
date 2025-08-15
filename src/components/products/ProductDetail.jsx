@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { toast } from 'react-toastify';
+import SizeGuide from './SizeGuide';
 
 const ProductDetail = ({ product }) => {
   const { name, price, description, image } = product;
@@ -51,6 +52,7 @@ const ProductDetail = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState(availableColors?.[0] || '');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
   
   const { addToCart } = useCart();
   const { 
@@ -248,7 +250,7 @@ const ProductDetail = ({ product }) => {
                 <div>
                   <div className="flex justify-between items-center">
                     <h3 className="text-sm font-medium text-gray-900">Select Size</h3>
-                    <button className="text-sm text-indigo-600 hover:text-indigo-800">Size Guide</button>
+                    <button className="text-sm text-indigo-600 hover:text-indigo-800" onClick={() => setShowSizeGuide(true)}>Size Guide</button>
                   </div>
                   <div className="mt-3">
                     <div className="flex items-center flex-wrap gap-3">
@@ -460,6 +462,12 @@ const ProductDetail = ({ product }) => {
           </div>
         </div>
       </div>
+      
+      {/* Size Guide Modal */}
+      <SizeGuide 
+        isOpen={showSizeGuide} 
+        onClose={() => setShowSizeGuide(false)} 
+      />
     </div>
   );
 };

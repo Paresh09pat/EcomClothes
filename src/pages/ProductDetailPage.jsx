@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 import { baseUrl } from '../utils/constant';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import ProductDetail from '../components/products/ProductDetail';
+import SizeGuide from '../components/products/SizeGuide';
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
-  const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const { addToCart } = useCart();
-  const { isAuthenticated, token } = useAuth();
   const navigate = useNavigate();
+  const { token, isAuthenticated } = useAuth();
+  const { addToCart } = useCart();
+  
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const fetchProduct = async () => {
     try {
@@ -228,7 +232,12 @@ const ProductDetailPage = () => {
             <div className="mt-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-gray-900">Select Size</h3>
-                <button className="text-sm text-indigo-600 hover:text-indigo-800">Size Guide</button>
+                <button 
+                  className="text-sm text-indigo-600 hover:text-indigo-800"
+                  onClick={() => setShowSizeGuide(true)}
+                >
+                  Size Guide
+                </button>
               </div>
               <div className="mt-3">
                 <div className="flex items-center flex-wrap gap-3">
@@ -311,6 +320,12 @@ const ProductDetailPage = () => {
           )}
         </div>
       </div>
+      
+      {/* Size Guide Modal */}
+      <SizeGuide 
+        isOpen={showSizeGuide} 
+        onClose={() => setShowSizeGuide(false)} 
+      />
     </div>
   );
 };

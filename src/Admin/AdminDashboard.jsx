@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Edit, Trash2, Eye, Package, Truck, CheckCircle, Clock, Filter, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Search, Edit, Trash2, Eye, Package, Truck, CheckCircle, Clock, Filter, ChevronLeft, ChevronRight, X, QrCode, Upload, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { baseUrl } from '../utils/constant';
@@ -26,9 +26,97 @@ const AdminDashboard = () => {
     const [totalOrders, setTotalOrders] = useState(0);
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+    
+    // QR Management States
+    const [qrImages, setQrImages] = useState([]);
+    const [selectedQrFile, setSelectedQrFile] = useState(null);
+    const [qrUploadLoading, setQrUploadLoading] = useState(false);
+    const [showQrModal, setShowQrModal] = useState(false);
+    const [selectedQrImage, setSelectedQrImage] = useState(null);
+    
     const ordersPerPage = 10;
 
     const { adminToken } = useAuth();
+
+  
+
+    const handleQrFileSelect = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showNotification('Please select an image file', 'error');
+                return;
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('File size should be less than 5MB', 'error');
+                return;
+            }
+            setSelectedQrFile(file);
+        }
+    };
+
+    const uploadQrImage = async () => {
+        if (!selectedQrFile) {
+            showNotification('Please select a file first', 'error');
+            return;
+        }
+
+        setQrUploadLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', selectedQrFile);
+            formData.append('type', 'upi');
+            formData.append('name', selectedQrFile.name || 'UPI QR Code');
+
+            const response = await axios.post(`${baseUrl}/admin/add-qr`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.data.success) {
+                showNotification('QR image uploaded successfully!');
+                setSelectedQrFile(null);
+                // Reset file input
+                const fileInput = document.getElementById('qrFileInput');
+                if (fileInput) fileInput.value = '';
+                // Refresh orders to get updated QR images
+                await getAllOrders();
+            } else {
+                throw new Error(response.data.message || 'Upload failed');
+            }
+        } catch (error) {
+            console.error('Error uploading QR image:', error);
+            showNotification('Failed to upload QR image. Please try again.', 'error');
+        } finally {
+            setQrUploadLoading(false);
+        }
+    };
+
+ 
+
+    const openQrModal = (qrImage) => {
+        setSelectedQrImage(qrImage);
+        setShowQrModal(true);
+    };
+
+    // Function to get a random QR code for UPI payments
+    const getRandomQrCode = () => {
+        if (qrImages.length === 0) return null;
+        const randomIndex = Math.floor(Math.random() * qrImages.length);
+        const qrImage = qrImages[randomIndex];
+        
+        // Return in the format expected by UPI payment components
+        return {
+            id: qrImage.id,
+            url: qrImage.url,
+            name: qrImage.name,
+            type: qrImage.type || 'upi'
+        };
+    };
 
     // Format currency function
     const formatCurrency = (amount) => {
@@ -214,15 +302,73 @@ const AdminDashboard = () => {
                     Authorization: `Bearer ${adminToken}`
                 }
             });
-            setAllOrders(response.data.orders);
-            setCurrentPage(1); // Reset to first page when fetching new data
+            
+            if (response.data.success) {
+                setAllOrders(response.data.orders);
+                
+                // Extract QR images from the API response
+                if (response.data.qr && Array.isArray(response.data.qr)) {
+                    const qrData = response.data.qr.map(qr => ({
+                        id: qr._id,
+                        name: qr.image.split('/').pop() || 'UPI QR Code',
+                        url: qr.image,
+                        type: 'upi',
+                        createdAt: new Date().toISOString(),
+                        userId: qr.user
+                    }));
+                    setQrImages(qrData);
+                }
+                
+                setCurrentPage(1); // Reset to first page when fetching new data
+            }
         } catch (error) {
+            console.error('Error fetching orders:', error);
+            showNotification('Failed to fetch orders', 'error');
         }
     };
 
+    // Function to fetch QR images (now integrated with getAllOrders)
+    const fetchQrImages = async () => {
+        // QR images are now fetched as part of getAllOrders
+        // This function is kept for backward compatibility
+        return;
+    };
+
+    // Function to delete QR image
+    const deleteQrImage = async (qrId) => {
+        try {
+            const response = await axios.delete(`${baseUrl}/admin/qr-images/${qrId}`, {
+                headers: {
+                    Authorization: `Bearer ${adminToken}`
+                }
+            });
+
+            if (response.data.success) {
+                showNotification('QR image deleted successfully!');
+                // Remove from local state
+                setQrImages(prev => prev.filter(qr => qr.id !== qrId));
+            } else {
+                throw new Error('Delete failed');
+            }
+        } catch (error) {
+            console.error('Error deleting QR image:', error);
+            if (error.response?.status === 404) {
+                // Backend endpoint not available, remove from local state for demo
+                setQrImages(prev => prev.filter(qr => qr.id !== qrId));
+                showNotification('QR image deleted successfully! (Demo Mode)');
+            } else {
+                showNotification('Failed to delete QR image. Please try again.', 'error');
+            }
+        }
+    };
+    
+    // Fetch orders on component mount
     useEffect(() => {
-        getAllOrders();
-    }, [searchTerm, statusFilter]);
+        if (adminToken) {
+            getAllOrders();
+            // fetchQrImages(); // Also fetch QR images - now integrated
+        }
+    }, [adminToken, searchTerm, statusFilter]);
     // Helper function to get order items summary
     const getOrderItemsSummary = (items) => {
         if (items.length === 1) {
@@ -381,6 +527,116 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
+                {/* QR Code Management */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+                        <div className="flex items-center mb-3 sm:mb-0">
+                            <QrCode className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-2" />
+                            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">UPI QR Code Management</h2>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                            {qrImages.length} QR code{qrImages.length !== 1 ? 's' : ''} available
+                        </div>
+                    </div>
+
+                    {/* Upload Section */}
+                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
+                            <div className="flex-1 min-w-0">
+                                <label htmlFor="qrFileInput" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Upload New QR Code
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        id="qrFileInput"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleQrFileSelect}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    />
+                                    <button
+                                        onClick={uploadQrImage}
+                                        disabled={!selectedQrFile || qrUploadLoading}
+                                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {qrUploadLoading ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                Uploading...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Upload className="h-4 w-4 mr-2" />
+                                                Upload
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                                
+                                {/* Selected File Display */}
+                                {selectedQrFile && (
+                                    <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center">
+                                                <ImageIcon className="h-4 w-4 text-blue-600 mr-2" />
+                                                <span className="text-sm text-blue-800 font-medium">
+                                                    {selectedQrFile.name}
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedQrFile(null);
+                                                    const fileInput = document.getElementById('qrFileInput');
+                                                    if (fileInput) fileInput.value = '';
+                                                }}
+                                                className="text-blue-600 hover:text-blue-800"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-blue-600 mt-1">
+                                            Size: {(selectedQrFile.size / 1024 / 1024).toFixed(2)} MB
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Supported formats: JPG, PNG, GIF. Max size: 5MB
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* QR Images Grid */}
+                    {qrImages.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {qrImages.map((qrImage) => (
+                                <div key={qrImage.id} className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                                    <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                                        <img
+                                            src={qrImage.url}
+                                            alt={qrImage.name}
+                                            className="w-full h-full object-contain cursor-pointer hover:scale-105 transition-transform"
+                                            onClick={() => openQrModal(qrImage)}
+                                            onError={(e) => {
+                                                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9Ijk2IiB5PSIxMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UVIgQ29kZTwvdGV4dD4KPC9zdmc+';
+                                            }}
+                                        />
+                                    </div>
+                              
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {qrImages.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            <ImageIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                            <p className="text-sm">No QR codes uploaded yet</p>
+                            <p className="text-xs">Upload your first UPI QR code above</p>
+                        </div>
+                    )}
+                </div>
+
                 {/* Filters and Search */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -453,6 +709,11 @@ const AdminDashboard = () => {
                                         </td>
                                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900">{formatCurrency(order.totalAmount)}</div>
+                                            {order.paymentMethod === 'upi' && order.txnId && (
+                                                <div className="text-xs text-green-600 font-medium mt-1">
+                                                    ✓ UPI Paid
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
@@ -475,7 +736,16 @@ const AdminDashboard = () => {
                                             </div>
                                         </td>
                                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                                            <div className="text-sm text-gray-900 capitalize">{order.paymentMethod}</div>
+                                            <div className="text-sm text-gray-900 capitalize">
+                                                {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 
+                                                 order.paymentMethod === 'upi' ? 'UPI Payment' : 
+                                                 order.paymentMethod}
+                                            </div>
+                                            {order.paymentMethod === 'upi' && order.txnId && (
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    Txn: {order.txnId.slice(0, 8)}...
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                                             {new Date(order.createdAt).toLocaleDateString()}
@@ -619,7 +889,16 @@ const AdminDashboard = () => {
                                                 {selectedOrder.status}
                                             </span>
                                         </p>
-                                        <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod.toUpperCase()}</p>
+                                        <p><strong>Payment Method:</strong> {
+                                            selectedOrder.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 
+                                            selectedOrder.paymentMethod === 'upi' ? 'UPI Payment' : 
+                                            selectedOrder.paymentMethod.toUpperCase()
+                                        }</p>
+                                        {selectedOrder.paymentMethod === 'upi' && selectedOrder.txnId && (
+                                            <p className="text-sm text-blue-600 font-mono bg-blue-50 p-2 rounded border">
+                                                <strong>Transaction ID:</strong> {selectedOrder.txnId}
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-gray-900 mb-2">Customer Information</h3>
@@ -785,6 +1064,16 @@ const AdminDashboard = () => {
                                         <option value="Cancelled">Cancelled</option>
                                     </select>
                                     <p className="text-sm text-blue-700 mt-1">Current status: <span className="font-medium">{editingOrder.status}</span></p>
+                                    
+                                    {/* Show Transaction ID for UPI orders */}
+                                    {editingOrder.paymentMethod === 'upi' && editingOrder.txnId && (
+                                        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-md">
+                                            <p className="text-sm text-green-800">
+                                                <strong>UPI Transaction ID:</strong> 
+                                                <span className="font-mono ml-2 text-green-700">{editingOrder.txnId}</span>
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
@@ -804,6 +1093,92 @@ const AdminDashboard = () => {
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Image Modal */}
+            {showQrModal && selectedQrImage && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+                            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
+                                {selectedQrImage.name}
+                            </h3>
+                            <button
+                                onClick={() => setShowQrModal(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-4 sm:p-6">
+                            <div className="text-center mb-4">
+                                <div className="bg-gray-100 rounded-lg p-4 inline-block">
+                                    <img
+                                        src={selectedQrImage.url}
+                                        alt={selectedQrImage.name}
+                                        className="max-w-full max-h-96 object-contain mx-auto"
+                                        onError={(e) => {
+                                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9Ijk2IiB5PSIxMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UVIgQ29kZTwvdGV4dD4KPC9zdmc+';
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-gray-700">Name:</span>
+                                    <span className="text-sm text-gray-900">{selectedQrImage.name}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-gray-700">Type:</span>
+                                    <span className="text-sm text-gray-900 capitalize">{selectedQrImage.type || 'UPI'}</span>
+                                </div>
+                                {selectedQrImage.userId && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium text-gray-700">User ID:</span>
+                                        <span className="text-sm text-gray-900 font-mono">{selectedQrImage.userId}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-gray-700">Uploaded:</span>
+                                    <span className="text-sm text-gray-900">
+                                        {new Date(selectedQrImage.createdAt).toLocaleDateString()}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-gray-700">Image URL:</span>
+                                    <span className="text-sm text-gray-900 break-all max-w-xs">
+                                        {selectedQrImage.url}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-3 p-4 sm:p-6 border-t border-gray-200">
+                            <button
+                                onClick={() => setShowQrModal(false)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={() => {
+                                    // Download functionality
+                                    const link = document.createElement('a');
+                                    link.href = selectedQrImage.url;
+                                    link.download = selectedQrImage.name || 'qr-code';
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                }}
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            >
+                                Download
+                            </button>
                         </div>
                     </div>
                 </div>

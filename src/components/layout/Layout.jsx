@@ -3,24 +3,13 @@ import { useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
-import { baseUrl } from '../../utils/constant';
 
 const Layout = () => {
   const location = useLocation();
-  const { setUser } = useAuth();
-
-  const getProfile = async () => {
-    const res = await axios.get(`${baseUrl}/v1/user/profile`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('_token_ecommerce')}`
-      }
-    });
-    setUser(res?.data?.user);
-  }
+  const { validateToken } = useAuth();
 
   useEffect(() => {
-    getProfile();
+    validateToken();
   }, []);
   
   return (

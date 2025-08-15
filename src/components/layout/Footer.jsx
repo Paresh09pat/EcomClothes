@@ -119,28 +119,7 @@ const Footer = () => {
           {/* Newsletter */}
           <div>
             <h3 className="text-lg font-semibold mb-4 text-indigo-300">Stay Connected</h3>
-            <p className="text-gray-400 text-sm mb-4">
-              Subscribe to our newsletter for updates on new arrivals and special offers.
-            </p>
-            <form className="mb-4">
-              <div className="relative">
-                <input
-                  type="email"
-                  placeholder="Your email address"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-200 text-sm"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1 top-1 bottom-1 bg-indigo-600 hover:bg-indigo-700 px-4 rounded-md transition-colors duration-300 text-sm font-medium"
-                >
-                  Subscribe
-                </button>
-              </div>
-            </form>
-            <p className="text-xs text-gray-500">
-              By subscribing, you agree to our Privacy Policy and consent to receive updates from our company.
-            </p>
+           <p className='text-gray-400 text-sm mb-4'>We are always here to help you. If you have any questions, please contact us.</p>
           </div>
         </div>
 

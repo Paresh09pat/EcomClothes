@@ -107,14 +107,7 @@ const Testimonials = () => {
           ))}
         </div>
         
-        <div className="mt-12 text-center">
-          <button className="inline-flex items-center px-6 py-3 border border-indigo-600 text-indigo-600 bg-white hover:bg-indigo-50 rounded-lg font-medium transition-colors duration-200">
-            View All Reviews
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
+       
       </div>
     </section>
   );

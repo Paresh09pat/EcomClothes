@@ -194,7 +194,9 @@ const OrderHistoryPage = () => {
                       <div>
                         <p className="text-sm text-gray-500">PAYMENT</p>
                         <p className="font-medium capitalize">
-                          {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod}
+                          {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 
+                           order.paymentMethod === 'upi' ? 'UPI Payment' : 
+                           order.paymentMethod}
                         </p>
                       </div>
                       <div className="mt-2 sm:mt-0">

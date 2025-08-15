@@ -504,10 +504,22 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
           <h3 className="text-base font-bold mb-3">PAYMENT METHOD</h3>
           <div className="text-sm">
             <p className="font-medium capitalize">
-              {order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : order.paymentMethod}
+              {order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 
+               order.paymentMethod === 'upi' ? 'UPI Payment' : 
+               order.paymentMethod}
             </p>
             {order.paymentMethod === 'cod' && (
               <p className="text-gray-600 mt-1">Pay when your order is delivered</p>
+            )}
+            {order.paymentMethod === 'upi' && (
+              <div className="mt-2">
+                <p className="text-gray-600">Payment completed via UPI</p>
+                {order.transactionId && (
+                  <p className="text-gray-600 mt-1">
+                    Transaction ID: <span className="font-mono text-sm bg-gray-200 px-2 py-1 rounded">{order.transactionId}</span>
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>

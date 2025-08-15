@@ -97,7 +97,8 @@ const CheckoutPage = () => {
           city: formData.city,
           state: formData.state,
           pincode: formData.zipCode,
-          country: 'India'
+          country: 'India',
+          type: formData.addressType || 'home'
         },
         selectedSize: validOrderItems.map(item => item.selectedSize || item.size).join(', '),
         paymentMethod: formData.paymentMethod
@@ -310,7 +311,7 @@ const CheckoutPage = () => {
               </div>
 
               <p className="text-sm text-gray-500 mt-4">
-                * Cash on Delivery is the only payment method available
+                * UPI and Cash on Delivery payment methods available
               </p>
             </div>
           </div>

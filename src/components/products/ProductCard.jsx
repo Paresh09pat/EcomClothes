@@ -1,4 +1,4 @@
-import { HeartIcon, ShoppingBagIcon, StarIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, ShoppingBagIcon, StarIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import axios from 'axios';
 import { useState, useEffect } from 'react';
@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { baseUrl } from '../../utils/constant';
+import SizeGuide from './SizeGuide';
 
 const ProductCard = ({ product }) => {
   const {
@@ -17,6 +18,7 @@ const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const [selectedSize, setSelectedSize] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
   const { token } = useAuth()
 
   // Simple image processing - get all available images
@@ -343,6 +345,24 @@ const ProductCard = ({ product }) => {
               {availableSizes.length > 0 && selectedSize && (
                 <p className="text-xs text-indigo-600 mt-1">Selected: {selectedSize}</p>
               )}
+              
+              {/* Size Guide Button - Only show when sizes are available */}
+              {availableSizes.length > 0 && (
+                <div className="mt-2 flex items-center justify-center">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowSizeGuide(true);
+                    }}
+                    className="inline-flex items-center text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors px-2 py-1 rounded hover:bg-blue-50"
+                    title="View Size Guide"
+                  >
+                    <InformationCircleIcon className="h-3 w-3 mr-1" />
+                    Size Guide
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -356,6 +376,12 @@ const ProductCard = ({ product }) => {
           Add to Cart
         </button>
       </div>
+      
+      {/* Size Guide Modal */}
+      <SizeGuide 
+        isOpen={showSizeGuide} 
+        onClose={() => setShowSizeGuide(false)} 
+      />
     </div>
   );
 };

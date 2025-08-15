@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPinIcon, ShieldCheckIcon, TruckIcon, BanknotesIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, ShieldCheckIcon, TruckIcon, BanknotesIcon, DevicePhoneMobileIcon, QrCodeIcon } from '@heroicons/react/24/outline';
 
 const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total = 0 }) => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
     state: '',
     zipCode: '',
     phone: '',
-    paymentMethod: 'cod', // Only COD available
+    paymentMethod: 'cod', // Default to COD
     ...initialValues
   });
 
@@ -107,9 +107,24 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (validateForm()) {
-      onSubmit({...formData, addressType});
+    if (!validateForm()) {
+      return;
     }
+
+    // If UPI is selected, navigate to UPI payment page
+    if (formData.paymentMethod === 'upi') {
+      navigate('/upi-payment', { 
+        state: { 
+          formData,
+          cart,
+          total
+        }
+      });
+      return;
+    }
+
+    // For COD, proceed with normal checkout
+    onSubmit({...formData, addressType});
   };
 
   // Calculate totals from actual cart data
@@ -349,21 +364,52 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
             </div>
             
             <div className="space-y-4">
-              <div className="bg-white border border-blue-200 rounded-md p-4 border-blue-500 transition-colors">
+              {/* UPI Payment Option */}
+              <div className={`border rounded-md p-4 transition-colors ${
+                formData.paymentMethod === 'upi' 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}>
+                <div className="flex items-center">
+                  <input
+                    id="upi"
+                    name="paymentMethod"
+                    type="radio"
+                    value="upi"
+                    checked={formData.paymentMethod === 'upi'}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="upi" className="ml-3 flex items-center cursor-pointer">
+                    <QrCodeIcon className="h-6 w-6 text-blue-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">UPI Payment</span>
+                    <span className="ml-auto text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Recommended</span>
+                  </label>
+                </div>
+                <p className="text-sm text-gray-500 mt-2 ml-7">
+                  Pay securely using UPI. Scan QR code and enter transaction ID to confirm payment.
+                </p>
+              </div>
+
+              {/* COD Payment Option */}
+              <div className={`border rounded-md p-4 transition-colors ${
+                formData.paymentMethod === 'cod' 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}>
                 <div className="flex items-center">
                   <input
                     id="cod"
                     name="paymentMethod"
                     type="radio"
                     value="cod"
-                    checked={true}
-                    readOnly
+                    checked={formData.paymentMethod === 'cod'}
+                    onChange={handleChange}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <label htmlFor="cod" className="ml-3 flex items-center">
+                  <label htmlFor="cod" className="ml-3 flex items-center cursor-pointer">
                     <BanknotesIcon className="h-6 w-6 text-gray-500 mr-2" />
                     <span className="text-sm font-medium text-gray-700">Cash on Delivery</span>
-                    <span className="ml-auto text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Only Option Available</span>
                   </label>
                 </div>
                 <p className="text-sm text-gray-500 mt-2 ml-7">
