@@ -221,6 +221,39 @@ const ProductForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Client-side validation
+        if (!formData.name.trim()) {
+            toast.error("Product name is required");
+            return;
+        }
+        
+        if (!formData.description.trim()) {
+            toast.error("Product description is required");
+            return;
+        }
+        
+        if (!formData.price || parseFloat(formData.price) <= 0) {
+            toast.error("Valid price is required");
+            return;
+        }
+        
+        if (!formData.category) {
+            toast.error("Please select a category");
+            return;
+        }
+        
+
+        
+        // Image validation
+        const hasNewFileUploads = imageUploadMethod === "file" && imageFiles.length > 0;
+        const hasImageUrls = imageUploadMethod === "url" && formData.images.length > 0;
+        
+        if (!isEditMode && !hasNewFileUploads && !hasImageUrls) {
+            toast.error("Please add at least one product image");
+            return;
+        }
+        
         setLoading(true);
 
         try {
@@ -361,7 +394,9 @@ const ProductForm = () => {
 
                     {/* Name */}
                     <div>
-                        <label className="block mb-1 font-medium">Product Name</label>
+                        <label className="block mb-1 font-medium">
+                            Product Name <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="text"
                             className="w-full border rounded-md p-2"
@@ -373,7 +408,9 @@ const ProductForm = () => {
 
                     {/* Description */}
                     <div>
-                        <label className="block mb-1 font-medium">Description</label>
+                        <label className="block mb-1 font-medium">
+                            Description <span className="text-red-500">*</span>
+                        </label>
                         <textarea
                             className="w-full border rounded-md p-2"
                             value={formData.description}
@@ -386,7 +423,9 @@ const ProductForm = () => {
 
                     {/* Price */}
                     <div>
-                        <label className="block mb-1 font-medium">Price (₹)</label>
+                        <label className="block mb-1 font-medium">
+                            Price (₹) <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="number"
                             className="w-full border rounded-md p-2"
@@ -398,7 +437,9 @@ const ProductForm = () => {
 
                     {/* Category Single-select */}
                     <div>
-                        <label className="block mb-1 font-medium">Category</label>
+                        <label className="block mb-1 font-medium">
+                            Category <span className="text-red-500">*</span>
+                        </label>
                         <select
                             className="w-full border rounded-md p-2"
                             value={formData.category}
@@ -406,39 +447,48 @@ const ProductForm = () => {
                             required
                         >
                             <option value="">Select Category</option>
-                            {["Men", "Women", "Kids"].map((cat) => (
+                            {["Men", "Women", "Kids", "Accessories"].map((cat) => (
                                 <option key={cat} value={cat}>{cat}</option>
                             ))}
                         </select>
                     </div>
 
-                    {/* Size Multiple-select with checkboxes */}
-                    <div>
-                        <label className="block mb-1 font-medium">Size (Select Multiple)</label>
-                        <div className="flex flex-wrap gap-3 mt-2">
-                            {["S", "M", "L", "XL", "XXL"].map((size) => (
-                                <label key={size} className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        value={size}
-                                        checked={formData.size.includes(size)}
-                                        onChange={() => handleSizeChange(size)}
-                                        className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                    />
-                                    <span className="text-sm font-medium text-gray-700">{size}</span>
-                                </label>
-                            ))}
+                    {/* Size Multiple-select with checkboxes - Only required for clothing categories */}
+                    {formData.category && formData.category !== "Accessories" && (
+                        <div>
+                            <label className="block mb-1 font-medium">
+                                Size (Select Multiple)
+                            </label>
+                            <div className="flex flex-wrap gap-3 mt-2">
+                                {["S", "M", "L", "XL", "XXL"].map((size) => (
+                                    <label key={size} className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            value={size}
+                                            checked={formData.size.includes(size)}
+                                            onChange={() => handleSizeChange(size)}
+                                            className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">{size}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            {formData.size.length > 0 && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                    Selected: {formData.size.join(", ")}
+                                </p>
+                            )}
+                            {formData.size.length === 0 && (
+                                <p className="text-sm text-red-500 mt-1">Please select at least one size</p>
+                            )}
                         </div>
-                        {formData.size.length > 0 && (
-                            <p className="text-sm text-gray-600 mt-1">
-                                Selected: {formData.size.join(", ")}
-                            </p>
-                        )}
-                    </div>
+                    )}
 
                     {/* Images */}
                     <div>
-                        <label className="block mb-1 font-medium">Main Images</label>
+                        <label className="block mb-1 font-medium">
+                            Main Images {!isEditMode && <span className="text-red-500">*</span>}
+                        </label>
                         
                         {isEditMode && (
                             <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">

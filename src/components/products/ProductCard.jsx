@@ -96,23 +96,28 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (selectedSize === '') {
+    // Size is only required for clothing categories, not for accessories
+    if (product.category !== 'Accessories' && selectedSize === '') {
       toast.error('Please select a size');
       return;
     }
 
     try {
-      const res = await axios.post(`${baseUrl}/v1/cart/add`,
-        {
-          productId: product._id,
-          quantity: 1,
-          size: selectedSize
+      const cartData = {
+        productId: product._id,
+        quantity: 1
+      };
+      
+      // Only add size for non-accessory products
+      if (product.category !== 'Accessories') {
+        cartData.size = selectedSize;
+      }
+
+      const res = await axios.post(`${baseUrl}/v1/cart/add`, cartData, {
+        headers: {
+          Authorization: `Bearer ${token}`
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-        });
+      });
 
 
       if (res.data.success) {
@@ -310,62 +315,58 @@ const ProductCard = ({ product }) => {
           </div>
         </Link>
 
-        {/* Available Sizes - Fixed height section */}
-        <div className="mt-2 sm:mt-3" style={{ minHeight: availableSizes.length > 0 ? '60px' : '20px' }}>
-          {availableSizes.length > 0 && (
-            <>
-              <label className="block text-xs font-medium text-gray-700 mb-1 sm:mb-2">
-                Available Sizes:
-              </label>
-              <div className="flex flex-wrap gap-1">
-                {availableSizes.map((size) => (
-                  <label key={size} className="relative cursor-pointer">
-                    <input
-                      type="radio"
-                      name={`size-${product._id}`}
-                      value={size}
-                      checked={selectedSize === size}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setSelectedSize(size);
-                      }}
-                      className="sr-only"
-                    />
-                    <span
-                      className={`inline-flex items-center justify-center min-w-[24px] sm:min-w-[28px] h-6 sm:h-7 px-1 sm:px-2 text-xs font-medium border rounded transition-all ${selectedSize === size
-                        ? 'border-indigo-600 bg-indigo-600 text-white'
-                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                        }`}
-                    >
-                      {size}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {availableSizes.length > 0 && selectedSize && (
-                <p className="text-xs text-indigo-600 mt-1">Selected: {selectedSize}</p>
-              )}
-              
-              {/* Size Guide Button - Only show when sizes are available */}
-              {availableSizes.length > 0 && (
-                <div className="mt-2 flex items-center justify-center">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
+        {/* Available Sizes - Only show for non-accessory categories */}
+        {product.category !== 'Accessories' && availableSizes.length > 0 && (
+          <div className="mt-2 sm:mt-3">
+            <label className="block text-xs font-medium text-gray-700 mb-1 sm:mb-2">
+              Available Sizes:
+            </label>
+            <div className="flex flex-wrap gap-1">
+              {availableSizes.map((size) => (
+                <label key={size} className="relative cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`size-${product._id}`}
+                    value={size}
+                    checked={selectedSize === size}
+                    onChange={(e) => {
                       e.stopPropagation();
-                      setShowSizeGuide(true);
+                      setSelectedSize(size);
                     }}
-                    className="inline-flex items-center text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors px-2 py-1 rounded hover:bg-blue-50"
-                    title="View Size Guide"
+                    className="sr-only"
+                  />
+                  <span
+                    className={`inline-flex items-center justify-center min-w-[24px] sm:min-w-[28px] h-6 sm:h-7 px-1 sm:px-2 text-xs font-medium border rounded transition-all ${selectedSize === size
+                      ? 'border-indigo-600 bg-indigo-600 text-white'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                      }`}
                   >
-                    <InformationCircleIcon className="h-3 w-3 mr-1" />
-                    Size Guide
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+                    {size}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {selectedSize && (
+              <p className="text-xs text-indigo-600 mt-1">Selected: {selectedSize}</p>
+            )}
+            
+            {/* Size Guide Button */}
+            <div className="mt-2 flex items-center justify-center">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowSizeGuide(true);
+                }}
+                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors px-2 py-1 rounded hover:bg-blue-50"
+                title="View Size Guide"
+              >
+                <InformationCircleIcon className="h-3 w-3 mr-1" />
+                Size Guide
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Button - Always at bottom */}
         <button

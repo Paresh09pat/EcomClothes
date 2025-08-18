@@ -119,7 +119,8 @@ const Header = () => {
   const categories = [
     { name: 'Men', path: '/categories/Men' },
     { name: 'Women', path: '/categories/Women' },
-    { name: 'Kids', path: '/categories/Kids' },
+    // { name: 'Kids', path: '/categories/Kids' },
+    { name: 'Accessories', path: '/categories/Accessories' },
    
   ];
 
