@@ -96,28 +96,24 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Size is only required for clothing categories, not for accessories
+    // Size is only required for non-accessory products
     if (product.category !== 'Accessories' && selectedSize === '') {
       toast.error('Please select a size');
       return;
     }
 
     try {
-      const cartData = {
-        productId: product._id,
-        quantity: 1
-      };
-      
-      // Only add size for non-accessory products
-      if (product.category !== 'Accessories') {
-        cartData.size = selectedSize;
-      }
-
-      const res = await axios.post(`${baseUrl}/v1/cart/add`, cartData, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const res = await axios.post(`${baseUrl}/v1/cart/add`,
+        {
+          productId: product._id,
+          quantity: 1,
+          size: product.category === 'Accessories' ? 'One Size' : selectedSize
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        });
 
 
       if (res.data.success) {
@@ -315,7 +311,7 @@ const ProductCard = ({ product }) => {
           </div>
         </Link>
 
-        {/* Available Sizes - Only show for non-accessory categories */}
+        {/* Available Sizes - Only show for non-accessory products */}
         {product.category !== 'Accessories' && availableSizes.length > 0 && (
           <div className="mt-2 sm:mt-3">
             <label className="block text-xs font-medium text-gray-700 mb-1 sm:mb-2">
@@ -368,21 +364,30 @@ const ProductCard = ({ product }) => {
           </div>
         )}
 
+        {/* For accessories, show a simple message */}
+        {product.category === 'Accessories' && (
+          <div className="mt-2 sm:mt-3 text-center">
+            <p className="text-xs text-gray-500 italic">One Size Fits All</p>
+          </div>
+        )}
+
         {/* Button - Always at bottom */}
         <button
           onClick={(e) => handleAddToCart(e, product)}
           className="mt-3 sm:mt-4 w-full py-2 cursor-pointer px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium rounded-md flex items-center justify-center transition-colors"
         >
           <ShoppingBagIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          Add to Cart
+          {product.category === 'Accessories' ? 'Add Accessory' : 'Add to Cart'}
         </button>
       </div>
       
-      {/* Size Guide Modal */}
-      <SizeGuide 
-        isOpen={showSizeGuide} 
-        onClose={() => setShowSizeGuide(false)} 
-      />
+      {/* Size Guide Modal - Only show for non-accessory products */}
+      {product.category !== 'Accessories' && (
+        <SizeGuide 
+          isOpen={showSizeGuide} 
+          onClose={() => setShowSizeGuide(false)} 
+        />
+      )}
     </div>
   );
 };
