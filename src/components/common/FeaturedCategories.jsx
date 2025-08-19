@@ -18,22 +18,22 @@ const categories = [
     itemCount: '1,500+ Items',
     color: 'from-pink-500 to-rose-600'
   },
-  {
-    id: 'Kids',
-    name: 'Kids',
-    image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
-    description: 'Comfortable and stylish clothes for children.',
-    itemCount: '850+ Items',
-    color: 'from-yellow-400 to-orange-500'
-  },
   // {
-  //   id: 'accessories',
-  //   name: 'Accessories',
-  //   image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
-  //   description: 'Complete your look with our accessories.',
-  //   itemCount: '950+ Items',
-  //   color: 'from-teal-400 to-emerald-500'
-  // }
+  //   id: 'Kids',
+  //   name: 'Kids',
+  //   image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+  //   description: 'Comfortable and stylish clothes for children.',
+  //   itemCount: '850+ Items',
+  //   color: 'from-yellow-400 to-orange-500'
+  // },
+  {
+    id: 'Accessories',
+    name: 'Accessories',
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+    description: 'Complete your look with our accessories.',
+    itemCount: '950+ Items',
+    color: 'from-teal-400 to-emerald-500'
+  }
 ];
 
 const FeaturedCategories = () => {
