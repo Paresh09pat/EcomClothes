@@ -30,8 +30,8 @@ const CartItem = ({ item }) => {
 
   const product = item.product;
 
-  const discountPercentage = 20;
-  const originalPrice = (product?.price || 0) * 1.25;
+  const discountPercentage = 50;
+  const originalPrice = (product?.price || 0) * 2; // 100% higher for 50% discount
 
   // Function to get product image with proper fallback
   const getProductImage = () => {

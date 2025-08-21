@@ -11,7 +11,7 @@ const CartSummary = ({ cartItems }) => {
   const shipping = 0;
 
   // Calculate discount (sample calculation)
-  const discount = subtotal * 0.05; // 5% discount
+  const discount = subtotal * 0.5; // 50% discount
 
   // Calculate total
   const total = subtotal + shipping - discount;

@@ -213,7 +213,7 @@ const WishlistPage = () => {
                     }
                   }
 
-                  const originalPrice = item.price * 1.2;
+                  const originalPrice = item.price * 2; // For 50% discount
                 const discountPercentage = Math.round(((originalPrice - item.price) / originalPrice) * 100);
                 
                 return (

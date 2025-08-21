@@ -140,16 +140,25 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex space-x-8">
-              {categories.map((category) => (
-                <Link
-                  key={category.name}
-                  to={category.path}
-                  className="text-gray-700 hover:text-indigo-600 font-medium relative group py-2"
-                >
-                  {category.name}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all duration-300"></span>
-                </Link>
-              ))}
+              {categories.map((category) => {
+                const isActive = location.pathname === category.path;
+                return (
+                  <Link
+                    key={category.name}
+                    to={category.path}
+                    className={`font-medium relative group py-2 transition-colors duration-200 ${
+                      isActive 
+                        ? 'text-indigo-600' 
+                        : 'text-gray-700 hover:text-indigo-600'
+                    }`}
+                  >
+                    {category.name}
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-indigo-600 transition-all duration-300 ${
+                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </Link>
+                );
+              })}
             </nav>
 
             {/* User, Wishlist, Search and Cart */}
@@ -273,17 +282,27 @@ const Header = () => {
                     <div className="mb-8">
                       <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Categories</h3>
                       <ul className="space-y-3">
-                        {categories.map((category) => (
-                          <li key={category.name}>
-                            <Link
-                              to={category.path}
-                              className="text-gray-700 hover:text-indigo-600 block font-medium py-2 text-lg"
-                              onClick={() => setMobileMenuOpen(false)}
-                            >
-                              {category.name}
-                            </Link>
-                          </li>
-                        ))}
+                        {categories.map((category) => {
+                          const isActive = location.pathname === category.path;
+                          return (
+                            <li key={category.name}>
+                              <Link
+                                to={category.path}
+                                className={`block font-medium py-2 text-lg transition-colors duration-200 ${
+                                  isActive 
+                                    ? 'text-indigo-600' 
+                                    : 'text-gray-700 hover:text-indigo-600'
+                                }`}
+                                onClick={() => setMobileMenuOpen(false)}
+                              >
+                                {category.name}
+                                {isActive && (
+                                  <span className="ml-2 inline-block w-2 h-2 bg-indigo-600 rounded-full"></span>
+                                )}
+                              </Link>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
 

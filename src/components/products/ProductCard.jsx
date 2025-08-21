@@ -161,7 +161,7 @@ const ProductCard = ({ product }) => {
   };
 
   // Calculate discount percentage (for display purposes)
-  const originalPrice = product.price * 1.2; // Simulating original price
+  const originalPrice = product.price * 2; // Simulating original price for 50% discount
   const discountPercentage = Math.round(((originalPrice - product.price) / originalPrice) * 100);
 
   // Check if product is in wishlist

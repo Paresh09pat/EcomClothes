@@ -129,7 +129,7 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
 
   // Calculate totals from actual cart data
   const subtotal = total;
-  const discount = 0; // No discount for now
+  const discount = subtotal * 0.5; // 50% discount
   const shipping = 0;
   const finalTotal = subtotal + shipping - discount;
 

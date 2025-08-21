@@ -66,8 +66,8 @@ const ProductDetail = ({ product }) => {
   const isProductInWishlistState = isProductInWishlist(product.id || product._id);
   
   // Sample data for product details
-  const originalPrice = price * 1.25; // 25% higher than current price
-  const discountPercentage = 20;
+  const originalPrice = price * 2; // 100% higher than current price (50% discount)
+  const discountPercentage = 50;
   const rating = 4.5;
   const reviewCount = 127;
   const inStock = true;

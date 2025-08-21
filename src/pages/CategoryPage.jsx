@@ -99,11 +99,11 @@ const CategoryPage = () => {
         <p className="text-gray-600 max-w-2xl mx-auto">{category.description}</p>
         
         {/* Results count */}
-        {!loading && totalProducts > 0 && (
+        {/* {!loading && totalProducts > 0 && (
           <div className="mt-4 text-sm text-gray-500">
             Showing {totalProducts} product{totalProducts !== 1 ? 's' : ''} in this category
           </div>
-        )}
+        )} */}
       </header>
 
       {loading ? (
