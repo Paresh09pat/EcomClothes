@@ -117,7 +117,7 @@ const Header = () => {
   }, [mobileMenuOpen]);
 
   const categories = [
-    { name: 'Men', path: '/categories/Men' },
+    { name: 'Top Selling', path: '/categories/topSelling' },
     { name: 'Women', path: '/categories/Women' },
     // { name: 'Kids', path: '/categories/Kids' },
     { name: 'Accessories', path: '/categories/Accessories' },

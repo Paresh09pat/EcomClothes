@@ -74,7 +74,7 @@ const UPIPaymentPage = () => {
 
 
 
-    if (transactionId.trim().length < 12) {
+    if (transactionId.trim().length < 1) {
       toast.error('Please enter valid transaction ID.');
       return;
     }

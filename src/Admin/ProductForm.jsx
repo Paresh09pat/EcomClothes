@@ -45,10 +45,10 @@ const ProductForm = () => {
     // Load existing product data when in edit mode
     const loadProductData = async () => {
         if (!isEditMode || !productId) return;
-        
+
         try {
             setLoadingProduct(true);
-            
+
             // First try to get the specific product directly by ID
             try {
                 const directResponse = await axios.get(`${baseUrl}/admin/get-product/${productId}`, {
@@ -56,7 +56,7 @@ const ProductForm = () => {
                         Authorization: `Bearer ${adminToken}`
                     }
                 });
-                
+
                 if (directResponse.data.success) {
                     const product = directResponse.data.product;
                     await setProductData(product);
@@ -65,7 +65,7 @@ const ProductForm = () => {
             } catch (directError) {
                 console.log("Direct product fetch failed, trying fallback method:", directError.message);
             }
-            
+
             // Fallback: Get all products with higher limit to search through
             const response = await axios.get(`${baseUrl}/admin/get-all-products`, {
                 params: {
@@ -80,7 +80,7 @@ const ProductForm = () => {
             if (response.data.success) {
                 // Find the specific product from the products array
                 const product = response.data.products.find(p => p._id === productId);
-                
+
                 if (!product) {
                     console.error("Product not found in search. ProductId:", productId);
                     console.error("Available products count:", response.data.products.length);
@@ -88,7 +88,7 @@ const ProductForm = () => {
                     navigate("/admin/product-management");
                     return;
                 }
-                
+
                 await setProductData(product);
             } else {
                 toast.error("Failed to load product data");
@@ -150,13 +150,13 @@ const ProductForm = () => {
             new URL(url);
             // Check if it's an image URL (basic check)
             const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
-            const hasImageExtension = imageExtensions.some(ext => 
+            const hasImageExtension = imageExtensions.some(ext =>
                 url.toLowerCase().includes(ext)
             );
-            
+
             // Allow Cloudinary URLs even without file extensions
             const isCloudinary = url.includes('cloudinary.com') || url.includes('res.cloudinary.com');
-            
+
             return hasImageExtension || isCloudinary || url.includes('unsplash.com') || url.includes('cdn.') || url.includes('images.');
         } catch {
             return false;
@@ -166,27 +166,27 @@ const ProductForm = () => {
     const handleImageLinkAdd = (link) => {
         if (link && link.trim()) {
             const trimmedLink = link.trim();
-            
+
             // Validate URL
             if (!isValidImageUrl(trimmedLink)) {
                 toast.error('Please enter a valid image URL');
                 return;
             }
-            
+
             // Check if URL already exists
             if (formData.images.includes(trimmedLink)) {
                 toast.warn('This image URL is already added');
                 return;
             }
-            
+
             const newImages = [...formData.images, trimmedLink];
             setFormData({ ...formData, images: newImages });
-            
+
             // Update preview for URL method
             if (imageUploadMethod === "url") {
                 setImagePreview(newImages);
             }
-            
+
         }
     };
 
@@ -199,7 +199,7 @@ const ProductForm = () => {
         } else {
             const newImages = formData.images.filter((_, i) => i !== index);
             setFormData({ ...formData, images: newImages });
-            
+
             // Update preview for URL method
             if (imageUploadMethod === "url") {
                 setImagePreview(newImages);
@@ -221,39 +221,39 @@ const ProductForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Client-side validation
         if (!formData.name.trim()) {
             toast.error("Product name is required");
             return;
         }
-        
+
         if (!formData.description.trim()) {
             toast.error("Product description is required");
             return;
         }
-        
+
         if (!formData.price || parseFloat(formData.price) <= 0) {
             toast.error("Valid price is required");
             return;
         }
-        
+
         if (!formData.category) {
             toast.error("Please select a category");
             return;
         }
-        
 
-        
+
+
         // Image validation
         const hasNewFileUploads = imageUploadMethod === "file" && imageFiles.length > 0;
         const hasImageUrls = imageUploadMethod === "url" && formData.images.length > 0;
-        
+
         if (!isEditMode && !hasNewFileUploads && !hasImageUrls) {
             toast.error("Please add at least one product image");
             return;
         }
-        
+
         setLoading(true);
 
         try {
@@ -276,7 +276,7 @@ const ProductForm = () => {
                 dataToSend.append('category', formData.category);
                 dataToSend.append('size', JSON.stringify(formData.size));
                 dataToSend.append('isFeatured', formData.is_featured);
-                
+
                 // In edit mode, explicitly indicate we're replacing images
                 if (isEditMode) {
                     dataToSend.append('replaceImages', 'true');
@@ -288,7 +288,7 @@ const ProductForm = () => {
                 });
 
                 headers['Content-Type'] = 'multipart/form-data';
-                
+
             } else {
                 // Use JSON - either for URLs or no images
                 dataToSend = {
@@ -331,7 +331,7 @@ const ProductForm = () => {
                     headers
                 });
                 toast.success("Product created successfully");
-                
+
                 // Reset form for new product creation
                 setFormData({
                     name: "",
@@ -346,7 +346,7 @@ const ProductForm = () => {
                 setImagePreview([]);
                 setImageUploadMethod("file");
             }
-        } catch (err) {     
+        } catch (err) {
             // Handle session expiry
             if (err?.response?.status === 401) {
                 toast.error("Admin session expired. Please login again.");
@@ -378,7 +378,7 @@ const ProductForm = () => {
                 </div>
             </div>
         );
-    }   
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -447,9 +447,10 @@ const ProductForm = () => {
                             required
                         >
                             <option value="">Select Category</option>
-                            {["Men", "Women", "Kids", "Accessories"].map((cat) => (
-                                <option key={cat} value={cat}>{cat}</option>
-                            ))}
+                            <option value="Men">Top Selling</option>
+                            <option value="Women">Women</option>
+                            <option value="Kids">Kids</option>
+                            <option value="Accessories">Accessories</option>
                         </select>
                     </div>
 
@@ -489,7 +490,7 @@ const ProductForm = () => {
                         <label className="block mb-1 font-medium">
                             Main Images {!isEditMode && <span className="text-red-500">*</span>}
                         </label>
-                        
+
                         {isEditMode && (
                             <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
                                 <p className="text-sm text-blue-800">
@@ -626,11 +627,11 @@ const ProductForm = () => {
                                             e.target.nextSibling.style.display = 'none';
                                         }}
                                     />
-                                    <div 
+                                    <div
                                         className="w-20 h-20 bg-gray-200 rounded-md border text-xs text-gray-500 text-center"
                                         style={{ display: 'none', alignItems: 'center', justifyContent: 'center' }}
                                     >
-                                        Image<br/>Load Error
+                                        Image<br />Load Error
                                     </div>
                                     <button
                                         type="button"
@@ -684,8 +685,8 @@ const ProductForm = () => {
                             disabled={loading || loadingProduct}
                             className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading 
-                                ? (isEditMode ? 'Updating...' : 'Creating...') 
+                            {loading
+                                ? (isEditMode ? 'Updating...' : 'Creating...')
                                 : (isEditMode ? 'Update Product' : 'Submit Product')
                             }
                         </button>

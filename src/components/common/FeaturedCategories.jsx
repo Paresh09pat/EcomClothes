@@ -3,20 +3,20 @@ import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
 const categories = [
   {
-    id: 'Men',
-    name: 'Men',
-    image: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+    id: 'topSelling',
+    name: 'Top Selling',
+    image: '/topsel.jpg',
     description: 'Shop the latest trends in men\'s fashion.',
     itemCount: '1,200+ Items',
-    color: 'from-blue-500 to-indigo-600'
+    color: 'from-pink-500 '
   },
   {
     id: 'Women',
     name: 'Women',
-    image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+    image: '/women.JPG',
     description: 'Discover our collection of women\'s clothing.',
     itemCount: '1,500+ Items',
-    color: 'from-pink-500 to-rose-600'
+    color: 'from-pink-500 '
   },
   // {
   //   id: 'Kids',
@@ -29,10 +29,10 @@ const categories = [
   {
     id: 'Accessories',
     name: 'Accessories',
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+    image: '/acc.JPG',
     description: 'Complete your look with our accessories.',
     itemCount: '950+ Items',
-    color: 'from-teal-400 to-emerald-500'
+    color: 'from-pink-500 '
   }
 ];
 

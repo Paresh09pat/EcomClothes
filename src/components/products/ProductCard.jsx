@@ -53,7 +53,6 @@ const ProductCard = ({ product }) => {
     // Filter out invalid URLs and ensure we have an array
     images = images.filter(img => img && typeof img === 'string' && img.trim() !== '');
 
-    console.log(`Product ${product._id} - Images found:`, images);
     return images;
   };
 
@@ -394,6 +393,7 @@ const ProductCard = ({ product }) => {
       {product.category !== 'Accessories' && (
         <SizeGuide 
           isOpen={showSizeGuide} 
+          product={product}
           onClose={() => setShowSizeGuide(false)} 
         />
       )}

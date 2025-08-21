@@ -25,7 +25,7 @@ const categoryInfo = {
 };
 
 const CategoryPage = () => {
-  const { categoryId } = useParams();
+  let { categoryId } = useParams();
   
   // Pagination configuration
   const ITEMS_PER_PAGE = 20;
@@ -36,6 +36,10 @@ const CategoryPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+
+  if (categoryId === 'topSelling') {
+    categoryId = 'Men';
+  }
 
   const getProducts = async (page = currentPage, limit = ITEMS_PER_PAGE) => {
     try {

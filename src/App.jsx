@@ -28,7 +28,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ScrollToTop from './components/common/ScrollToTop';
+import WhatsAppButton from './components/common/ScrollToTop';
 import AdminDashboard from './Admin/AdminDashboard';
 import ProductManagement from './Admin/ProductManagement';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -44,7 +44,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <ScrollToTop />
+        <WhatsAppButton />
         <ToastContainer />
         <AuthProvider>
           <CartProvider>
