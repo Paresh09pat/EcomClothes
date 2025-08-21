@@ -250,7 +250,7 @@ const ProductDetail = ({ product }) => {
                 <div>
                   <div className="flex justify-between items-center">
                     <h3 className="text-sm font-medium text-gray-900">Select Size</h3>
-                    <button className="text-sm text-indigo-600 hover:text-indigo-800" onClick={() => setShowSizeGuide(true)}>Size Guide</button>
+                    <button className="text-sm text-indigo-600 hover:text-indigo-800 cursor-pointer" onClick={() => setShowSizeGuide(true)}>Size Guide</button>
                   </div>
                   <div className="mt-3">
                     <div className="flex items-center flex-wrap gap-3">
@@ -259,7 +259,7 @@ const ProductDetail = ({ product }) => {
                           key={size}
                           type="button"
                           className={`
-                            relative flex items-center justify-center rounded-md border py-2 px-4 text-sm font-medium uppercase
+                            relative flex items-center justify-center rounded-md border py-2 px-4 text-sm font-medium uppercase cursor-pointer
                             ${
                               selectedSize === size
                                 ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
@@ -288,7 +288,7 @@ const ProductDetail = ({ product }) => {
                           key={color}
                           type="button"
                           className={`
-                            group relative h-10 w-10 rounded-full border
+                            group relative h-10 w-10 rounded-full border cursor-pointer
                             ${selectedColor === color ? 'ring-2 ring-indigo-600 ring-offset-1' : 'border-gray-300 hover:ring-1 hover:ring-gray-400'}
                           `}
                           style={{ backgroundColor: color }}
@@ -317,7 +317,7 @@ const ProductDetail = ({ product }) => {
                 <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
                   <button
                     type="button"
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
@@ -326,7 +326,7 @@ const ProductDetail = ({ product }) => {
                   <span className="px-4 py-2 text-gray-700 font-medium border-l border-r border-gray-300">{quantity}</span>
                   <button
                     type="button"
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => setQuantity(quantity + 1)}
                   >
                     +

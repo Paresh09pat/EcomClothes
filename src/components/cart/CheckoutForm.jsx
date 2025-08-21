@@ -275,14 +275,14 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
                 <button
                   type="button"
                   onClick={() => setAddressType('home')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${addressType === 'home' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-700 border border-gray-200'}`}
+                  className={`px-4 py-2 rounded-md text-sm font-medium cursor-pointer ${addressType === 'home' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-700 border border-gray-200'}`}
                 >
                   Home
                 </button>
                 <button
                   type="button"
                   onClick={() => setAddressType('work')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${addressType === 'work' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-700 border border-gray-200'}`}
+                  className={`px-4 py-2 rounded-md text-sm font-medium cursor-pointer ${addressType === 'work' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-700 border border-gray-200'}`}
                 >
                   Work
                 </button>

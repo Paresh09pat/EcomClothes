@@ -190,7 +190,7 @@ const UPIPaymentPage = () => {
         <div className="mb-6 lg:mb-8">
           <button
             onClick={handleBackToCheckout}
-            className="flex items-center text-blue-600 hover:text-blue-700 mb-4"
+            className="flex items-center text-blue-600 hover:text-blue-700 mb-4 cursor-pointer"
           >
             <ArrowLeftIcon className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
             Back to Checkout
@@ -272,7 +272,7 @@ const UPIPaymentPage = () => {
               <button
                 onClick={handleConfirmOrder}
                 disabled={loading || !transactionId.trim() || transactionId.trim().length < 5}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 {loading ? 'Confirming Order...' : 'Confirm Order'}
               </button>

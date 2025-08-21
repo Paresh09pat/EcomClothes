@@ -212,7 +212,7 @@ const CartItem = ({ item }) => {
                   type="button"
                   onClick={handleDecreaseQuantity}
                   disabled={quantity <= 1}
-                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   -
                 </button>
@@ -222,7 +222,7 @@ const CartItem = ({ item }) => {
                 <button
                   type="button"
                   onClick={handleIncreaseQuantity}
-                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   +
                 </button>

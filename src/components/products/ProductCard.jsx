@@ -9,6 +9,27 @@ import { baseUrl } from '../../utils/constant';
 import SizeGuide from './SizeGuide';
 
 const ProductCard = ({ product }) => {
+  // Safety check - if no product, show error or loading
+  if (!product || Object.keys(product || {}).length === 0) {
+    return (
+      <div className="card group hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
+        <div className="h-48 sm:h-64 overflow-hidden rounded-t-lg bg-gray-200 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+            <p className="text-gray-500 text-sm">Loading...</p>
+          </div>
+        </div>
+        <div className="p-3 sm:p-4 flex-1 flex flex-col">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const {
     isAuthenticated,
     toggleWishlist,
@@ -96,7 +117,7 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
 
     // Size is only required for non-accessory products
-    if (product.category !== 'Accessories' && selectedSize === '') {
+    if (product?.category !== 'Accessories' && selectedSize === '') {
       toast.error('Please select a size');
       return;
     }
@@ -104,9 +125,9 @@ const ProductCard = ({ product }) => {
     try {
       const res = await axios.post(`${baseUrl}/v1/cart/add`,
         {
-          productId: product._id,
+          productId: product?._id || '',
           quantity: 1,
-          size: product.category === 'Accessories' ? 'One Size' : selectedSize
+          size: product?.category === 'Accessories' ? 'One Size' : selectedSize
         },
         {
           headers: {
@@ -114,11 +135,11 @@ const ProductCard = ({ product }) => {
           },
         });
 
-        //  if status code comes 401 then redirect to login page
-        if (res.status === 401) {
-          navigate('/login');
-          return;
-        }
+      //  if status code comes 401 then redirect to login page
+      if (res.status === 401) {
+        navigate('/login');
+        return;
+      }
 
       if (res.data.success) {
         toast.success(res.data.message);
@@ -146,8 +167,8 @@ const ProductCard = ({ product }) => {
     }
 
     try {
-      const wasInWishlist = isProductInWishlist(product._id);
-      const response = await toggleWishlist(product);
+      const wasInWishlist = isProductInWishlist(product?._id || '');
+      const response = await toggleWishlist(product || {});
 
       if (response.status === 200) {
         const message = wasInWishlist
@@ -161,16 +182,16 @@ const ProductCard = ({ product }) => {
   };
 
   // Calculate discount percentage (for display purposes)
-  const originalPrice = product.price * 2; // Simulating original price for 50% discount
-  const discountPercentage = Math.round(((originalPrice - product.price) / originalPrice) * 100);
+  const originalPrice = (product?.price || 0) * 2; // Simulating original price for 50% discount
+  const discountPercentage = Math.round(((originalPrice - (product?.price || 0)) / originalPrice) * 100);
 
   // Check if product is in wishlist
-  const isInWishlist = isProductInWishlist(product._id);
+  const isInWishlist = isProductInWishlist(product?._id || '');
 
   return (
     <div className="card group hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
 
-      <Link to={`/products/${product._id}`} className="block relative overflow-hidden">
+      <Link to={`/products/${product?._id || ''}`} className="block relative overflow-hidden">
         <div className="relative">
           <button
             onClick={handleWishlistToggle}
@@ -189,13 +210,13 @@ const ProductCard = ({ product }) => {
           </button>
 
           <div className="h-48 sm:h-64 overflow-hidden rounded-t-lg bg-gray-100 relative group">
-            {images && images.length > 0 ? (
+            {images && Array.isArray(images) && images.length > 0 ? (
               <>
                 {/* Main Image */}
                 <img
-                  key={`${product._id}-${currentImageIndex}`}
+                  key={`${product?._id || 'unknown'}-${currentImageIndex}`}
                   src={images[currentImageIndex]}
-                  alt={`${product.name} - Image ${currentImageIndex + 1}`}
+                  alt={`${product?.name || 'Product'} - Image ${currentImageIndex + 1}`}
                   className="h-full w-full object-cover object-center transition-all duration-300 group-hover:scale-105 cursor-pointer"
                   onClick={(e) => {
                     if (images.length > 1) {
@@ -223,7 +244,7 @@ const ProductCard = ({ product }) => {
                         e.stopPropagation();
                         prevImage();
                       }}
-                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all shadow-lg"
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all shadow-lg cursor-pointer"
                       aria-label="Previous image"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,7 +259,7 @@ const ProductCard = ({ product }) => {
                         e.stopPropagation();
                         nextImage();
                       }}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all shadow-lg"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full transition-all shadow-lg cursor-pointer"
                       aria-label="Next image"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,7 +280,7 @@ const ProductCard = ({ product }) => {
                           e.stopPropagation();
                           goToImage(index);
                         }}
-                        className={`w-2 h-2 rounded-full transition-all duration-200 ${index === currentImageIndex
+                        className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${index === currentImageIndex
                           ? 'bg-white scale-125'
                           : 'bg-white bg-opacity-60 hover:bg-opacity-80 hover:scale-110'
                           }`}
@@ -309,18 +330,18 @@ const ProductCard = ({ product }) => {
         </div>
 
         <Link to={`/products/${product._id}`} className="block flex-1">
-          <h3 className="text-xs sm:text-sm font-medium text-gray-700 line-clamp-2 hover:text-indigo-600 transition-colors">{product.name}</h3>
-          <p className="mt-1 text-xs text-gray-500 capitalize">{product.category}</p>
+          <h3 className="text-xs sm:text-sm font-medium text-gray-700 line-clamp-2 hover:text-indigo-600 transition-colors">{product?.name || 'Product Name'}</h3>
+          <p className="mt-1 text-xs text-gray-500 capitalize">{product?.category || 'General'}</p>
 
           <div className="mt-2 flex items-center flex-wrap">
-            <span className="font-bold text-gray-900 text-sm sm:text-base">₹{product.price.toFixed(2)}</span>
+            <span className="font-bold text-gray-900 text-sm sm:text-base">₹{(product?.price || 0).toFixed(2)}</span>
             <span className="ml-2 text-xs sm:text-sm text-gray-500 line-through">₹{originalPrice.toFixed(2)}</span>
             <span className="ml-2 text-xs font-medium text-green-600">{discountPercentage}% off</span>
           </div>
         </Link>
 
         {/* Available Sizes - Only show for non-accessory products */}
-        {product.category !== 'Accessories' && availableSizes.length > 0 && (
+        {product?.category !== 'Accessories' && availableSizes && Array.isArray(availableSizes) && availableSizes.length > 0 && (
           <div className="mt-2 sm:mt-3">
             <label className="block text-xs font-medium text-gray-700 mb-1 sm:mb-2">
               Available Sizes:
@@ -330,7 +351,7 @@ const ProductCard = ({ product }) => {
                 <label key={size} className="relative cursor-pointer">
                   <input
                     type="radio"
-                    name={`size-${product._id}`}
+                    name={`size-${product?._id || 'unknown'}`}
                     value={size}
                     checked={selectedSize === size}
                     onChange={(e) => {
@@ -353,7 +374,7 @@ const ProductCard = ({ product }) => {
             {selectedSize && (
               <p className="text-xs text-indigo-600 mt-1">Selected: {selectedSize}</p>
             )}
-            
+
             {/* Size Guide Button */}
             <div className="mt-2 flex items-center justify-center">
               <button
@@ -362,7 +383,7 @@ const ProductCard = ({ product }) => {
                   e.stopPropagation();
                   setShowSizeGuide(true);
                 }}
-                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors px-2 py-1 rounded hover:bg-blue-50"
+                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors px-2 py-1 rounded hover:bg-blue-50 cursor-pointer"
                 title="View Size Guide"
               >
                 <InformationCircleIcon className="h-3 w-3 mr-1" />
@@ -373,7 +394,7 @@ const ProductCard = ({ product }) => {
         )}
 
         {/* For accessories, show a simple message */}
-        {product.category === 'Accessories' && (
+        {product?.category === 'Accessories' && (
           <div className="mt-2 sm:mt-3 text-center">
             <p className="text-xs text-gray-500 italic">One Size Fits All</p>
           </div>
@@ -385,16 +406,16 @@ const ProductCard = ({ product }) => {
           className="mt-3 sm:mt-4 w-full py-2 cursor-pointer px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium rounded-md flex items-center justify-center transition-colors"
         >
           <ShoppingBagIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          {product.category === 'Accessories' ? 'Add Accessory' : 'Add to Cart'}
+          {product?.category === 'Accessories' ? 'Add Accessory' : 'Add to Cart'}
         </button>
       </div>
-      
+
       {/* Size Guide Modal - Only show for non-accessory products */}
-      {product.category !== 'Accessories' && (
-        <SizeGuide 
-          isOpen={showSizeGuide} 
-          product={product}
-          onClose={() => setShowSizeGuide(false)} 
+      {product?.category !== 'Accessories' && (
+        <SizeGuide
+          isOpen={showSizeGuide}
+          product={product || {}}
+          onClose={() => setShowSizeGuide(false)}
         />
       )}
     </div>

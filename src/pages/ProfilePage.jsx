@@ -251,7 +251,7 @@ const ProfilePage = () => {
                           <button
                             onClick={handleSaveField}
                             disabled={updating}
-                            className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                            className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50 cursor-pointer"
                           >
                             {updating ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
@@ -262,7 +262,7 @@ const ProfilePage = () => {
                           <button
                             onClick={handleCancelEdit}
                             disabled={updating}
-                            className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                            className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50 cursor-pointer"
                           >
                             <XMarkIcon className="h-4 w-4" />
                           </button>
@@ -275,7 +275,7 @@ const ProfilePage = () => {
                           </div>
                           <button
                             onClick={() => handleEditField('name', profileData?.name || user?.name)}
-                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity"
+                            className="opacity-100 md:opacity-0 md:group-hover:opacity-50 cursor-pointer"
                           >
                             <PencilIcon className="h-4 w-4" />
                           </button>
@@ -309,7 +309,7 @@ const ProfilePage = () => {
                           <button
                             onClick={handleSaveField}
                             disabled={updating}
-                            className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                            className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50 cursor-pointer"
                           >
                             {updating ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
@@ -320,7 +320,7 @@ const ProfilePage = () => {
                           <button
                             onClick={handleCancelEdit}
                             disabled={updating}
-                            className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                            className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50 cursor-pointer"
                           >
                             <XMarkIcon className="h-4 w-4" />
                           </button>
@@ -333,7 +333,7 @@ const ProfilePage = () => {
                           </div>
                           <button
                             onClick={() => handleEditField('phone', profileData?.phone || user?.phone)}
-                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity"
+                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 text-indigo-600 hover:text-indigo-800 transition-opacity cursor-pointer"
                           >
                             <PencilIcon className="h-4 w-4" />
                           </button>

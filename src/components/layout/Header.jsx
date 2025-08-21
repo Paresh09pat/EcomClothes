@@ -195,7 +195,7 @@ const Header = () => {
               {/* User Account */}
               {user ? (
                 <div ref={profileMenuRef} className="relative">
-                  <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="flex items-center text-gray-700 hover:text-indigo-600 transition-colors">
+                  <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="flex items-center text-gray-700 hover:text-indigo-600 transition-colors cursor-pointer">
                     <UserIcon className="h-6 w-6" />
                     <span className="ml-1 hidden sm:inline font-medium">{user?.name}</span>
                   </button>
@@ -212,7 +212,7 @@ const Header = () => {
                     <div className="border-t border-gray-100 my-1"></div>
                     <button
                       onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer"
                     >
                       Logout
                     </button>
@@ -227,7 +227,7 @@ const Header = () => {
 
               {/* Mobile menu button - moved to the end */}
               <button
-                className="lg:hidden text-gray-700 hover:text-indigo-600 focus:outline-none"
+                className="lg:hidden text-gray-700 hover:text-indigo-600 focus:outline-none cursor-pointer"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Toggle menu"
               >
@@ -258,7 +258,7 @@ const Header = () => {
                     <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
                     <button
                       onClick={() => setMobileMenuOpen(false)}
-                      className="text-gray-700 hover:text-indigo-600 focus:outline-none"
+                      className="text-gray-700 hover:text-indigo-600 focus:outline-none cursor-pointer"
                       aria-label="Close menu"
                     >
                       <XMarkIcon className="h-6 w-6" />

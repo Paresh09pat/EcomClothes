@@ -110,13 +110,13 @@ const FeaturedProducts = () => {
               <div className="mt-4 space-y-2">
                 <button 
                   onClick={() => window.location.reload()} 
-                  className="text-red-600 hover:text-red-800 font-medium mr-4"
+                  className="text-red-600 hover:text-red-800 font-medium mr-4 cursor-pointer"
                 >
                   Try Again
                 </button>
                 <button 
                   onClick={() => setError(null)} 
-                  className="text-gray-600 hover:text-gray-800 font-medium"
+                  className="text-gray-600 hover:text-gray-800 font-medium cursor-pointer"
                 >
                   Dismiss
                 </button>
