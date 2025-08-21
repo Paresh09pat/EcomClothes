@@ -115,6 +115,11 @@ const ProductCard = ({ product }) => {
           },
         });
 
+        //  if status code comes 401 then redirect to login page
+        if (res.status === 401) {
+          navigate('/login');
+          return;
+        }
 
       if (res.data.success) {
         toast.success(res.data.message);
@@ -123,6 +128,10 @@ const ProductCard = ({ product }) => {
         navigate('/cart');
       }
     } catch (err) {
+      if (err.response.status === 401) {
+        navigate('/login');
+        return;
+      }
       toast.error(err.response.data.message);
     }
   }
