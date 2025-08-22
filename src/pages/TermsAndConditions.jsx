@@ -1,4 +1,5 @@
 import React from 'react';
+import { CONTACT_INFO } from '../utils/constant';
 
 const TermsAndConditions = () => {
   return (
@@ -41,8 +42,8 @@ const TermsAndConditions = () => {
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">7. Contact Us</h2>
-      <p className="mb-4">
-        For any concerns, please contact <span className="text-blue-600">rajesj2738@gmail.com</span>.
+      <p className="text-gray-600 mb-4">
+        For any concerns, please contact <span className="text-blue-600">{CONTACT_INFO.email}</span>.
       </p>
     </div>
   );

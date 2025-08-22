@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { EnvelopeIcon, PhoneIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { CONTACT_INFO } from '../../utils/constant';
 
 const Footer = () => {
   const socialLinks = [
@@ -53,15 +54,15 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-start">
                 <MapPinIcon className="h-5 w-5 text-indigo-400 mt-0.5 mr-3" />
-                <p className="text-sm text-gray-400">123 Fashion Street, Style City, SC 12345</p>
+                <p className="text-sm text-gray-400">{CONTACT_INFO.address}</p>
               </div>
               <div className="flex items-center">
                 <PhoneIcon className="h-5 w-5 text-indigo-400 mr-3" />
-                <p className="text-sm text-gray-400">+1 (555) 123-4567</p>
+                <p className="text-sm text-gray-400">{CONTACT_INFO.phone}</p>
               </div>
               <div className="flex items-center">
                 <EnvelopeIcon className="h-5 w-5 text-indigo-400 mr-3" />
-                <p className="text-sm text-gray-400">support@fashionstore.com</p>
+                <p className="text-sm text-gray-400">{CONTACT_INFO.email}</p>
               </div>
             </div>
           </div>
@@ -75,8 +76,8 @@ const Footer = () => {
                 { name: 'Women', path: '/categories/Women' },
                 // { name: 'Kids', path: '/categories/kids' },
                 { name: 'Accessories', path: '/categories/Accessories' },
-                { name: 'New Arrivals', path: '#' },
-                { name: 'Sale', path: '#' },
+                { name: 'New Arrivals', path: '/categories/topSelling' },
+                { name: 'Sale', path: '/' },
               ].map((item) => (
                 <li key={item.name}>
                   <Link 
@@ -96,7 +97,7 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4 text-indigo-300">Customer Service</h3>
             <ul className="space-y-3 text-gray-400 text-sm">
               {[
-                { name: 'Contact Us', path: '#' },
+                { name: 'Contact Us', path: '/contact' },
                 // { name: 'FAQ', path: '#' },
                 { name: 'Shipping & Returns', path: '#' },
                 { name: 'Size Guide', path: '#' },

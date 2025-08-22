@@ -1,4 +1,5 @@
 import React from 'react';
+import { CONTACT_INFO } from '../utils/constant';
 
 const PrivacyPolicy = () => {
   return (
@@ -38,8 +39,8 @@ const PrivacyPolicy = () => {
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">6. Contact Us</h2>
-      <p className="mb-4">
-        If you have any questions, contact us at <span className="text-blue-600">rajesj2738@gmail.com        </span>.
+      <p className="text-gray-600 mb-4">
+        If you have any questions, contact us at <span className="text-blue-600">{CONTACT_INFO.email}</span>.
       </p>
     </div>
   );

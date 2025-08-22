@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { CONTACT_INFO } from '../../utils/constant';
 import { useLocation } from 'react-router-dom';
 
 /**
@@ -33,8 +34,8 @@ const WhatsAppButton = () => {
   // Open WhatsApp
   const openWhatsApp = () => {
     // You can customize the phone number and message here
-    const phoneNumber = '919876543210'; // Replace with your actual WhatsApp number
-    const message = 'Hi! I have a question about your products.'; // Customize the message
+    const phoneNumber = CONTACT_INFO.whatsapp; // Replace with your actual WhatsApp number
+    const message = CONTACT_INFO.whatsappMessage;
     
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

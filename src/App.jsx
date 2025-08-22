@@ -17,6 +17,7 @@ import OrderHistoryPage from './pages/OrderHistoryPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
 import UPIPaymentPage from './pages/UPIPaymentPage';
+import ContactPage from './pages/ContactPage';
 
 import AdminLogin from './Admin/AdminLogin';
 import AdminProtect from './components/auth/AdminProtect';
@@ -55,7 +56,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/admin-login" element={<AdminLogin />} />
-
+              
 
 
                 {/* Admin Protected Routes */}
@@ -71,6 +72,7 @@ function App() {
                   <Route path="product-form" element={<ProductForm />} />
                   <Route path="edit-product/:productId" element={<ProductForm />} />
                   <Route path="product-management" element={<ProductManagement />} />
+
                 </Route>
 
                 {/* Legacy admin routes for backward compatibility */}
@@ -84,6 +86,7 @@ function App() {
                   <Route index element={<HomePage />} />
                   <Route path="products/:productId" element={<ProductDetailPage />} />
                   <Route path="categories/:categoryId" element={<CategoryPage />} />
+                  <Route path="contact" element={<ContactPage />} />
                 </Route>
 
                 {/* Protected User Routes */}
@@ -101,8 +104,10 @@ function App() {
                   <Route path="orders" element={<OrderHistoryPage />} />
                   <Route path="wishlist" element={<WishlistPage />} />
                   <Route path="profile" element={<ProfilePage />} />
+                  <Route path="contact" element={<ContactPage />} />
                   <Route path="privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="terms-and-conditions" element={<TermsAndConditions />} />
+                  <Route path="contact" element={<ContactPage />} />
                 </Route>
 
               </Routes>

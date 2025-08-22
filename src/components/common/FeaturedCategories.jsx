@@ -6,7 +6,7 @@ const categories = [
     id: 'topSelling',
     name: 'Top Selling',
     image: '/topsel.jpg',
-    description: 'Shop the latest trends in men\'s fashion.',
+    description: 'Shop our top selling products',
     itemCount: '1,200+ Items',
     color: 'from-pink-500 '
   },
