@@ -131,7 +131,7 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
   const subtotal = total;
   const discount = subtotal * 0.5; // 50% discount
   const shipping = 0;
-  const finalTotal = subtotal + shipping - discount;
+  const finalTotal = subtotal + shipping;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -424,10 +424,10 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
               <span className="text-sm text-gray-600">Subtotal:</span>
               <span className="text-sm font-medium">₹{subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between mb-2">
+            {/* <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-600">Discount:</span>
               <span className="text-sm font-medium text-green-600">-₹{discount.toFixed(2)}</span>
-            </div>
+            </div> */}
             <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-600">Shipping:</span>
               <span className="text-sm font-medium text-green-600">{shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}</span>
