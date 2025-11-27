@@ -50,8 +50,6 @@ const UPIPaymentPage = () => {
           toast.error('Please login again to continue');
           navigate('/login');
         } else if (error.response?.status === 404) {
-          // Backend endpoint not available, generate fallback QR code
-
           toast.info('Demo mode: Using placeholder QR code for testing');
         } else {
           toast.error('Failed to generate QR code. Please try again.');
