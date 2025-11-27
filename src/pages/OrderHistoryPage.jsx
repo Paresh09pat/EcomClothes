@@ -16,7 +16,6 @@ const OrderHistoryPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedSize, setSelectedSize] = useState(null);
   
   useEffect(() => {
     const fetchOrders = async () => {
@@ -225,7 +224,9 @@ const OrderHistoryPage = () => {
                           <div className="flex-1 ml-0 sm:ml-4 mt-2 sm:mt-0">
                             <h3 className="font-medium text-gray-900">{item.product ? item.product.name : 'Product Name Not Available'}</h3>
                             <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
-                            <p className="text-sm text-gray-500">Size: {order.selectedSize || 'N/A'}</p>
+                            <p className="text-sm text-gray-500">
+                              Size: {item.selectedSize || item.size || 'N/A'}
+                            </p>
                             <p className="text-sm text-gray-500">Category: {item.product ? item.product.category : 'N/A'}</p>
                             {item.product && item.product.description && (
                               <p className="text-xs text-gray-400 mt-1 truncate max-w-xs">
