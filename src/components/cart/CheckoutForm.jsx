@@ -392,7 +392,7 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
               </div>
 
               {/* COD Payment Option */}
-              <div className={`border rounded-md p-4 transition-colors ${
+              {/* <div className={`border rounded-md p-4 transition-colors ${
                 formData.paymentMethod === 'cod' 
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-200 bg-white hover:border-gray-300'
@@ -415,7 +415,7 @@ const CheckoutForm = ({ onSubmit, loading, initialValues = {}, cart = [], total 
                 <p className="text-sm text-gray-500 mt-2 ml-7">
                   Pay with cash upon delivery. Our delivery partner will collect the payment in Indian Rupees (₹).
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
           

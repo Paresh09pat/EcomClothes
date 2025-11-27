@@ -73,8 +73,7 @@ function App() {
                   <Route path="edit-product/:productId" element={<ProductForm />} />
                   <Route path="product-management" element={<ProductManagement />} />
 
-                </Route>
-
+                </Route>  
                 {/* Legacy admin routes for backward compatibility */}
                 <Route path="/admin-dashboard" element={<AdminProtect><AdminRedirect to="/admin/dashboard" /></AdminProtect>} />
                 <Route path="/product-form" element={<AdminProtect><AdminRedirect to="/admin/product-form" /></AdminProtect>} />

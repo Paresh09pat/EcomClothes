@@ -39,8 +39,8 @@ const UPIPaymentPage = () => {
         });
 
         if (response.data.success) {
-          console.log(response.data.qr[0].image);
-          setQrCodeUrl(response?.data?.qr[0]?.image);
+          console.log(response.data.qrImage.url);
+          setQrCodeUrl(response?.data?.qrImage.url);
         } else {
           toast.error('Failed to generate QR code');
         }
@@ -51,7 +51,7 @@ const UPIPaymentPage = () => {
           navigate('/login');
         } else if (error.response?.status === 404) {
           // Backend endpoint not available, generate fallback QR code
-         
+
           toast.info('Demo mode: Using placeholder QR code for testing');
         } else {
           toast.error('Failed to generate QR code. Please try again.');
@@ -116,7 +116,7 @@ const UPIPaymentPage = () => {
         setOrderId(orderResponse.data.order._id || `ORD-${Date.now()}`);
         setOrderConfirmed(true);
         toast.success('Order confirmed successfully!');
-        
+
         // Redirect to order confirmation after 2 seconds
         setTimeout(() => {
           navigate('/order-confirmation', {
@@ -206,7 +206,7 @@ const UPIPaymentPage = () => {
               <QrCodeIcon className="h-5 w-5 lg:h-6 lg:w-6 mr-2 text-blue-600" />
               Scan QR Code
             </h2>
-            
+
             {loading ? (
               <div className="flex items-center justify-center h-48 lg:h-64">
                 <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-blue-600"></div>
@@ -249,7 +249,7 @@ const UPIPaymentPage = () => {
             <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">
               Complete Payment
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label htmlFor="transactionId" className="block text-sm font-medium text-gray-700 mb-2">

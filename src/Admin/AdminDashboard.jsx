@@ -66,7 +66,7 @@ const AdminDashboard = () => {
         setQrUploadLoading(true);
         try {
             const formData = new FormData();
-            formData.append('image', selectedQrFile);
+            formData.append('qrImage', selectedQrFile);
             formData.append('type', 'upi');
             formData.append('name', selectedQrFile.name || 'UPI QR Code');
 
@@ -306,8 +306,18 @@ const AdminDashboard = () => {
             if (response.data.success) {
                 setAllOrders(response.data.orders);
                 
-                // Extract QR images from the API response
-                if (response.data.qr && Array.isArray(response.data.qr)) {
+                // Extract QR image from the API response
+                if (response.data.qrImage && response.data.qrImage.url) {
+                    const qrData = [{
+                        id: response.data.qrImage.public_id || 'qr-image',
+                        name: response.data.qrImage.url.split('/').pop() || 'UPI QR Code',
+                        url: response.data.qrImage.url,
+                        type: 'upi',
+                        createdAt: new Date().toISOString()
+                    }];
+                    setQrImages(qrData);
+                } else if (response.data.qr && Array.isArray(response.data.qr)) {
+                    // Fallback for old API format (array of QR images)
                     const qrData = response.data.qr.map(qr => ({
                         id: qr._id,
                         name: qr.image.split('/').pop() || 'UPI QR Code',
@@ -317,6 +327,9 @@ const AdminDashboard = () => {
                         userId: qr.user
                     }));
                     setQrImages(qrData);
+                } else {
+                    // No QR image in response
+                    setQrImages([]);
                 }
                 
                 setCurrentPage(1); // Reset to first page when fetching new data

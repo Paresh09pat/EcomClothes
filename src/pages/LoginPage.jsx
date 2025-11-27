@@ -21,11 +21,11 @@ const LoginPage = () => {
 
     try {
       const res = await axios.post(`${baseUrl}/v1/auth/login`, { email, password });
-      
+
       if (res.status === 200 && res.data) {
         login(res?.data);
         navigate('/');
-        localStorage.setItem('_token_ecommerce', res?.data?.token);  
+        localStorage.setItem('_token_ecommerce', res?.data?.token);
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
@@ -94,11 +94,7 @@ const LoginPage = () => {
                 </label>
               </div>
 
-              <div className="text-sm">
-                <Link to="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Forgot password?
-                </Link>
-              </div>
+
             </div>
 
             <div>
