@@ -953,6 +953,7 @@ const AdminDashboard = () => {
                                     <div className="space-y-2">
                                         {selectedOrder.items.map((item, index) => {
                                             const allImages = getAllProductImages(item.product);
+                                            const resolvedSize = item.selectedSize || item.size || selectedOrder.selectedSize || 'N/A';
                                             return (
                                                 <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded">
                                                     <div className="flex items-center gap-2 sm:gap-3">
@@ -985,7 +986,7 @@ const AdminDashboard = () => {
                                                             <p className="font-medium text-sm sm:text-base truncate">{item.product.name}</p>
                                                             <p className="text-xs sm:text-sm text-gray-600">Category: {item.product.category}</p>
                                                             <p className="text-xs sm:text-sm text-gray-600">Quantity: {item.quantity}</p>
-                                                            <p className="text-xs sm:text-sm text-gray-600">Size: {selectedOrder.selectedSize || 'N/A'}</p>
+                                                            <p className="text-xs sm:text-sm text-gray-600">Size: {resolvedSize}</p>
                                                         </div>
                                                     </div>
                                                     <p className="font-medium text-sm sm:text-base ml-2">{formatCurrency(item.product.price)}</p>

@@ -68,6 +68,13 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
     return '/cloth1.png'; // Using the existing image in public folder
   };
 
+  // Resolve the size selected for each order item
+  const getItemSize = (item) => {
+    if (item?.selectedSize) return item.selectedSize;
+    if (item?.size) return item.size;
+    return order?.selectedSize || 'N/A';
+  };
+
   // Function to get status color and icon
   const getStatusInfo = (status) => {
     const normalizedStatus = normalizeStatus(status);
@@ -447,7 +454,7 @@ const OrderConfirmation = ({ order: initialOrder, onOrderUpdate, getOrders }) =>
                 <div className="ml-4 flex-1">
                   <h3 className="text-sm font-medium text-gray-900">{item.product ? item.product.name : 'Product Name Not Available'}</h3>
                   <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
-                  <p className="text-sm text-gray-500">Size: {order.selectedSize || 'N/A'}</p>
+                  <p className="text-sm text-gray-500">Size: {getItemSize(item)}</p>
                   <p className="text-xs text-gray-500">Category: {item.product ? item.product.category : 'N/A'}</p>
                   {item.product && item.product.description && (
                     <p className="text-xs text-gray-400 mt-1 truncate max-w-xs">
